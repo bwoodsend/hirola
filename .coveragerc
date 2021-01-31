@@ -1,0 +1,30 @@
+# .coveragerc to control coverage.py
+[run]
+branch = True
+source = hirola
+plugins =
+  coverage_conditional_plugin
+
+[report]
+# Regexes for lines to exclude from consideration
+exclude_lines =
+    # Have to re-enable the standard pragma
+    pragma: no cover
+
+    # Don't complain if tests don't hit defensive assertion code:
+    raise AssertionError
+    raise NotImplementedError
+
+    # Don't complain if non-runnable code isn't run:
+    if 0:
+    if __name__ == .__main__.:
+ignore_errors = True
+
+[coverage_conditional_plugin]
+# Here we specify our pragma rules:
+rules =
+  "platform_system != 'Windows'": Windows
+  "platform_system != 'Darwin'": Darwin
+  "platform_system != 'Linux'": Linux
+  "sys_platform != 'msys'": msys
+  "platform_system != 'FreeBSD'": FreeBSD
