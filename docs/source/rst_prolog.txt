@@ -1,0 +1,8 @@
+.. role:: c(code)
+    :language: c
+    :class: highlight
+
+.. role:: py(code)
+    :language: python
+    :class: highlight
+
