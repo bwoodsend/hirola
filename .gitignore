@@ -10,6 +10,8 @@ __pycache__/
 *.o
 *.def
 *.a
+*.json
+.coverage-cslug
 
 # Distribution / packaging
 .Python

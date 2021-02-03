@@ -6,6 +6,9 @@ from setuptools import setup, find_packages
 import runpy
 from pathlib import Path
 
+from cslug.building import (build_slugs, bdist_wheel, CSLUG_SUFFIX,
+                            copy_requirements)
+
 HERE = Path(__file__).resolve().parent
 
 readme = (HERE / 'README.rst').read_text("utf-8")
@@ -25,7 +28,7 @@ setup(
         'Programming Language :: Python :: 3.9',
     ],
     description="NumPy vectorized hash table for fast set and dict operations.",
-    install_requires=[],
+    install_requires=copy_requirements(),
     extras_require={
         "test": [
             'pytest>=3', 'pytest-order', 'coverage', 'pytest-cov',
@@ -34,11 +37,17 @@ setup(
     },
     license="MIT license",
     long_description=readme,
-    package_data={"hirola": []},
-    keywords='hirola',
+    package_data={
+        "hirola": ["*" + CSLUG_SUFFIX, "*.json"],
+    },
+    keywords='NumPy Hash-table dict set',
     name='hirola',
     packages=find_packages(include=['hirola', 'hirola.*']),
     url='https://github.com/bwoodsend/hirola',
     version=runpy.run_path(HERE / "hirola/_version.py")["__version__"],
     zip_safe=False,
+    cmdclass={
+        "build": build_slugs("hirola._hash_table:slug"),
+        "bdist_wheel": bdist_wheel,
+    },
 )
