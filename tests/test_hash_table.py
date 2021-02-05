@@ -22,7 +22,7 @@ def test_modulo():
 
 def test_hash():
     x = np.array([123, 4234, 213], dtype=np.uint32)
-    assert slug.dll.hash(ptr(x), 12) == np.bitwise_xor.reduce(x)
+    assert slug.dll.hash(ptr(x), 12) == np.bitwise_xor.reduce(x * 0x0B070503)
 
 
 def test_walk_through():
