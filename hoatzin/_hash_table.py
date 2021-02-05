@@ -54,6 +54,8 @@ class HashTable(object):
         self.dtype = np.dtype(dtype)
         key_size = self.dtype.itemsize
         self._base_dtype, self._dtype_shape = self.dtype.base, self.dtype.shape
+        if self._base_dtype == object:
+            raise TypeError("Object arrays are not permitted.")
 
         self._hash_owners = np.full(max, -1, np.intp)
         self._keys = np.empty(max, dtype=self.dtype)
