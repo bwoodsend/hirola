@@ -113,6 +113,11 @@ def test_dtype_normalisation_records():
     assert self.key_size == 16
 
 
+def test_object_array():
+    with pytest.raises(TypeError):
+        HashTable(10, object)
+
+
 @pytest.mark.parametrize("dtype", DTYPES)
 @pytest.mark.parametrize("sort", [False, True])
 @pytest.mark.parametrize("batch", [False, True])
