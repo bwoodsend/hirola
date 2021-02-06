@@ -57,6 +57,11 @@ class HashTable(object):
         if self._base_dtype == object:
             raise TypeError("Object arrays are not permitted.")
 
+        if max <= 0:
+            # Zero-sized tables get in the way of modulo.
+            # Negative-sized tables obviously don't make sense.
+            max = 1
+
         self._hash_owners = np.full(max, -1, np.intp)
         self._keys = np.empty(max, dtype=self.dtype)
         self._keys_readonly = np.frombuffer(self._keys, self.dtype)
