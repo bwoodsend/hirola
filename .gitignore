@@ -117,3 +117,6 @@ ENV/
 
 # Something Linuxy
 .fuse_hidden*
+
+# Computer generated
+hirola/hashes.h

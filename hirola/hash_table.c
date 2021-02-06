@@ -12,26 +12,17 @@ ptrdiff_t euclidean_modulo(ptrdiff_t x, ptrdiff_t base) {
 }
 
 
-ptrdiff_t hash(void * key, const size_t key_size) {
-
-  int32_t * key_ = (int32_t *) key;
-  ptrdiff_t out = 0;
-  for (size_t i = 0; i < key_size / sizeof(int32_t); i++)
-      out ^= key_[i] * 0x0B070503;
-  return out;
-}
-
-
 ptrdiff_t HT_hash_for(HashTable * self, void * key) {
   /* Either find **key**'s hash if **key** is in `self->keys` or
      choose an unused hash. */
 
   // Get an initial hash for `key`.
-  ptrdiff_t _hash = euclidean_modulo(hash(key, self->key_size), self->max);
+  ptrdiff_t _hash = euclidean_modulo(self -> hash(key, self->key_size),
+                                     self->max);
 
   // Search, starting from our initial hash:
   for (size_t j = 0; j < self->max; j++) {
-    // Provided the hash function hash() is working well for the input
+    // Provided the hash function self->hash() is working well for the input
     // data, this loop should rarely require more than one iteration.
 
     // If _hash is unclaimed:

@@ -1,14 +1,18 @@
 # -*- coding: utf-8 -*-
 """
 """
+import ctypes
 
 from numbers import Number
 from typing import Union
 
 import numpy as np
-from cslug import CSlug, ptr, anchor
+from cslug import CSlug, ptr, anchor, Header
 
-slug = CSlug(anchor("hash_table", "hash_table.h", "hash_table.c"))
+hashes_header = Header(*anchor("hashes.h", "hashes.c"),
+                       includes=["<stddef.h>", "<stdint.h>"])
+slug = CSlug(anchor("hash_table", "hash_table.h", "hash_table.c", "hashes.c"),
+             headers=hashes_header)
 
 dtype_types = Union[np.dtype, np.generic, type, str, list, tuple]
 
@@ -67,8 +71,9 @@ class HashTable(object):
         self._keys_readonly = np.frombuffer(self._keys, self.dtype)
         self._keys_readonly.flags.writeable = False
 
-        self._raw = slug.dll.HashTable(max, key_size, ptr(self._hash_owners),
-                                       ptr(self._keys))
+        self._raw = slug.dll.HashTable(
+            max, key_size, ptr(self._hash_owners), ptr(self._keys),
+            hash=ctypes.cast(slug.dll.hash, ctypes.c_void_p))
 
     @property
     def max(self) -> int:

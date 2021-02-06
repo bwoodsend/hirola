@@ -7,7 +7,9 @@
 #include <stddef.h>
 #include <string.h>
 
-//typedef int (*Hash)(void * key)
+
+typedef ptrdiff_t (*Hash)(void * key, const size_t key_size);
+
 
 typedef struct HashTable {
   const size_t max;
@@ -15,6 +17,7 @@ typedef struct HashTable {
   ptrdiff_t * const hash_owners;
   void * const keys;
   size_t length;
+  Hash hash;
 } HashTable;
 
 
