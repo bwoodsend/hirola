@@ -13,9 +13,11 @@ from tests import random_ids
 
 DATA = np.arange(120, dtype=np.int8).data
 DTYPES = [
-    np.int16, np.float64,
+    np.int16,
+    np.float64,
     np.dtype([("vertex", np.float32, 5)]),
-    np.dtype(np.bytes_) * 3
+    np.dtype(np.bytes_) * 3,
+    np.dtype(np.bytes_) * 15,
 ]
 
 

@@ -49,3 +49,12 @@ ptrdiff_t small_hash(void * key, const size_t key_size) {
   memcpy(&out, key, key_size);
   return out * 0x0B070503;
 }
+
+
+ptrdiff_t hybrid_hash(void * key, const size_t key_size) {
+  /* A combination of hash() and small_hash() for when **key_size** is not a
+     multiple of sizeof(int32_t). */
+
+  size_t tail = key_size % sizeof(int32_t);
+  return hash(key, key_size) ^ small_hash(key + (key_size - tail), tail);
+}
