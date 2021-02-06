@@ -71,9 +71,16 @@ class HashTable(object):
         self._keys_readonly = np.frombuffer(self._keys, self.dtype)
         self._keys_readonly.flags.writeable = False
 
-        self._raw = slug.dll.HashTable(
-            max, key_size, ptr(self._hash_owners), ptr(self._keys),
-            hash=ctypes.cast(slug.dll.hash, ctypes.c_void_p))
+        if key_size < 4:
+            hash = slug.dll.small_hash
+        elif key_size % 4 == 0:
+            hash = slug.dll.hash
+        else:  # pragma: no cover
+            assert 0
+
+        self._raw = slug.dll.HashTable(max, key_size, ptr(self._hash_owners),
+                                       ptr(self._keys), hash=ctypes.cast(
+                                           hash, ctypes.c_void_p))
 
     @property
     def max(self) -> int:

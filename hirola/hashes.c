@@ -1,5 +1,6 @@
 // -*- coding: utf-8 -*-
 
+#include <string.h>
 #include "hashes.h"
 
 
@@ -38,4 +39,13 @@ ptrdiff_t hash(void * key, const size_t key_size) {
   for (size_t i = 0; i < key_size / sizeof(int32_t); i++)
       out ^= key_[i] * 0x0B070503;
   return out;
+}
+
+
+ptrdiff_t small_hash(void * key, const size_t key_size) {
+  /* Hash for key_size <= sizeof(int32_t). */
+
+  ptrdiff_t out = 0;
+  memcpy(&out, key, key_size);
+  return out * 0x0B070503;
 }
