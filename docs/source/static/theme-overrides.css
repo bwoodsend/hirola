@@ -1,0 +1,60 @@
+/* Move padding beneath the last contents entry so that there isn't
+   a silly little black stub poking out under the scrollbar. */
+.wy-nav-side { padding-bottom: unset; }
+.wy-menu-vertical { padding-bottom: 1em; }
+
+/* Inline literals. */
+.rst-content code.literal, .rst-content tt.literal {
+  color: #034040;
+  background: #0000;
+  border: #0000;
+  padding: 2px 2px;
+  font-weight: 100;
+  font-size: 80%;
+}
+.rst-content a code.literal, .rst-content tt.literal {
+  border-bottom: solid 1px #0001;
+  padding: 2px 2px;
+}
+/* Inline literals in tables. */
+.rst-content table.docutils .code.literal {
+  /* Keep the fonts but lose the border box. Enable word wrapping. */
+  border-bottom: #0000;
+  white-space: normal;
+}
+/* Inline literals in admonitions. */
+.rst-content .admonition .code.literal, .rst-content .admonition code {
+  /* These blend into the background too much. Make them more prominent. */
+  background: #FCFCFCA0;
+  border-bottom: none;
+  padding: 2px 5px;
+}
+
+/* Use different color code-blocks. */
+/*div[class*="highlight"] .highlight { background: #fdf1ec; }*/
+
+/* Enable text wrapping in tables. */
+.wy-table-responsive table td, .wy-table-responsive table th {
+    white-space: normal;
+}
+
+/* Enable custom :strikethrough: role. */
+.strikethrough {
+  text-decoration: line-through;
+}
+
+/* Space out bullet point lists in custom `.. rst-class:: spacious` blocks. */
+.rst-content .section ul.spacious li {
+  margin-bottom: 18px;
+}
+
+/* Make the sidebar shrink if the window is narrow (e.g. panel left-ed). */
+.wy-nav-side {
+  width: min(28%, 300px);
+}
+.wy-side-scroll, .wy-side-nav-search, .wy-menu-vertical {
+  width: 100%;
+}
+.wy-nav-content-wrap {
+  margin-left: min(28%, 300px);
+}
