@@ -11,19 +11,18 @@ Hirola
     using urllib).
 
     from urllib.parse import quote
-    "https://img.shields.io/badge/" + quote("python- {}-blue.svg".format(\
-                " | ".join(["3.6", "3.7", "3.8", "3.9", "PyInstaller"])))
+    "https://img.shields.io/badge/"
+    quote("Python- {}-blue.svg".format(" | ".join(["3.6", "3.7", "3.8", "3.9"])))
 
 .. image::
     https://img.shields.io/badge/
-    Python-%203.6%20%7C%203.7%20%7C%203.8%20%7C%203.9%20%7C%20PyInstaller-blue.svg
+    Python-%203.6%20%7C%203.7%20%7C%203.8%20%7C%203.9-blue.svg
 
 NumPy vectorized hash table for fast set and dict operations.
 
-
 * Free software: MIT license
-* Documentation: https://hirola.readthedocs.io.
-
+* Documentation: https://hirola.readthedocs.io/
+* Source: https://github.com/bwoodsend/hirola/
 
 
 Installation
