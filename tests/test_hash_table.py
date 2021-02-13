@@ -161,3 +161,24 @@ def test(dtype, sort, batch):
 
     assert np.all(self.get(values) == ids)
     assert np.all(self.add(values) == ids)
+
+
+def test_destroy():
+    self = HashTable(10, float)
+    self.add([.3, .5, .8])
+
+    # Release self.keys so that it can be written to.
+    keys = self.destroy()
+    assert keys.flags.writeable
+    assert np.shares_memory(keys, self.keys)
+
+    # destroy() should be re-callable without complaint (although it's now
+    # functionless).
+    assert np.shares_memory(keys, self.destroy())
+
+    # Now that self.keys has been made accessibly writeable, it is no longer
+    # safe to use the table.
+    with pytest.raises(exceptions.HashTableDestroyed, match=".*"):
+        self.add(.8)
+    with pytest.raises(exceptions.HashTableDestroyed):
+        self.get(.5)

@@ -54,6 +54,9 @@ class HashTable(object):
                 The data type for the table's keys. Sets the :attr:`dtype`
                 attribute.
 
+        The **max** parameter is silently normalised to :class:`int` and clipped
+        to a minimum of 1 if it is less than 1.
+
         """
         self.dtype = np.dtype(dtype)
         key_size = self.dtype.itemsize
@@ -78,9 +81,10 @@ class HashTable(object):
         else:
             hash = slug.dll.hybrid_hash
 
+        self._destroyed = False
         self._raw = slug.dll.HashTable(max, key_size, ptr(self._hash_owners),
-                                       ptr(self._keys), hash=ctypes.cast(
-                                           hash, ctypes.c_void_p))
+                                       ptr(self._keys_readonly),
+                                       hash=ctypes.cast(hash, ctypes.c_void_p))
 
     @property
     def max(self) -> int:
@@ -105,7 +109,8 @@ class HashTable(object):
 
         Unlike Python's builtin :class:`dict`, this :attr:`keys` is a
         :class:`property` rather than a method. Keys must be immutable hence
-        this array is a readonly view.
+        this array is a readonly view. See :meth:`destroy` to release the
+        writable version.
 
         """
         return self._keys_readonly[:self.length]
@@ -137,8 +142,12 @@ class HashTable(object):
                 the :attr:`dtype` of this table.
             exceptions.HashTableFullError:
                 If there is no space to place new keys.
+            exceptions.HashTableDestroyed:
+                If the :meth:`destroy` method has been previously called.
 
         """
+        self._check_destroyed()
+
         keys, shape = self._norm_input_keys(keys)
         out = np.empty(shape, np.intp)
         index = slug.dll.HT_adds(self._raw._ptr, ptr(keys), ptr(out), out.size)
@@ -165,6 +174,8 @@ class HashTable(object):
             ValueError:
                 If the :attr:`~numpy.ndarray.dtype` of **keys** doesn't match
                 the :attr:`dtype` of this table.
+            exceptions.HashTableDestroyed:
+                If the :meth:`destroy` method has been previously called.
 
         """
         keys, shape = self._norm_input_keys(keys)
@@ -188,6 +199,8 @@ class HashTable(object):
         * For unlabelled records dtypes, right-strip :attr:`_dtype_shape`.
 
         """
+        self._check_destroyed()
+
         keys = np.asarray(keys, order="C")
         self._check_dtype(keys)
         if self._dtype_shape:
@@ -199,3 +212,28 @@ class HashTable(object):
                     format(self._dtype_shape, keys.shape))
             return keys, keys.shape[:split]
         return keys, keys.shape
+
+    def destroy(self) -> np.ndarray:
+        """Release a writeable version of :attr:`keys` and permanently disable
+        this table.
+
+        Returns:
+            A writeable shallow copy of :attr:`keys`.
+
+        Modifying :attr:`keys` would cause an internal meltdown and is
+        therefore blocked by setting the writeable flag to false. However, if
+        you no longer need this table then it is safe to do as you please with
+        the :attr:`keys` array. This function grants you full access to
+        :attr:`keys` but blocks you from adding to or getting from this table
+        in the future. If you want both a writeable :attr:`keys` array and
+        functional use of this table then use :py:`table.keys.copy()`.
+
+        """
+        # Destruction is just setting a flag.
+        self._destroyed = True
+        return self._keys[:self.length]
+
+    def _check_destroyed(self):
+        if self._destroyed:
+            from hirola.exceptions import HashTableDestroyed
+            raise HashTableDestroyed
