@@ -29,16 +29,22 @@
   such as Python's builtin hash() function, hirola hash functions can be
   tailored certain data types.
 
+  These hashes are empirically designed to best satisfy tests/test_hashes.py.
+
  */
 
+/* A big prime number that fits into a int32_t. */
+const size_t NOISE = 0x0B070503;
 
 int32_t hash(void * key, const size_t key_size) {
   /* Generic hash - assumes **key_size** is a multiple of sizeof(int32_t). */
 
   int32_t * key_ = (int32_t *) key;
   int32_t out = 0;
-  for (size_t i = 0; i < key_size / sizeof(int32_t); i++)
-      out ^= key_[i] * 0x0B070503;
+  for (size_t i = 0; i < key_size / sizeof(int32_t); i++) {
+      out ^= key_[i] * 0x10001;
+      out *= NOISE;
+  }
   return out;
 }
 
@@ -48,7 +54,7 @@ int32_t small_hash(void * key, const size_t key_size) {
 
   int32_t out = 0;
   memcpy(&out, key, key_size);
-  return out * 0x0B070503;
+  return out * NOISE;
 }
 
 
