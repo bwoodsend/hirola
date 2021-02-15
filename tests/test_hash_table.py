@@ -27,7 +27,7 @@ def test_modulo():
 
 
 def test_hash():
-    x = np.array([123, 4234, 213], dtype=np.uint32)
+    x = np.array([123, 4234, 213], dtype=np.int32)
     assert slug.dll.hash(ptr(x), 12) == np.bitwise_xor.reduce(x * 0x0B070503)
 
 

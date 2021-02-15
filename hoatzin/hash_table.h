@@ -8,7 +8,7 @@
 #include <string.h>
 
 
-typedef ptrdiff_t (*Hash)(void * key, const size_t key_size);
+typedef int32_t (*Hash)(void * key, const size_t key_size);
 
 
 typedef struct HashTable {
