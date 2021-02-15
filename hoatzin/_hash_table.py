@@ -74,13 +74,7 @@ class HashTable(object):
         self._keys_readonly = np.frombuffer(self._keys, self.dtype)
         self._keys_readonly.flags.writeable = False
 
-        if key_size < 4:
-            hash = slug.dll.small_hash
-        elif key_size % 4 == 0:
-            hash = slug.dll.hash
-        else:
-            hash = slug.dll.hybrid_hash
-
+        hash = choose_hash(key_size)
         self._destroyed = False
         self._raw = slug.dll.HashTable(max, key_size, ptr(self._hash_owners),
                                        ptr(self._keys_readonly),
@@ -237,3 +231,13 @@ class HashTable(object):
         if self._destroyed:
             from hoatzin.exceptions import HashTableDestroyed
             raise HashTableDestroyed
+
+
+def choose_hash(key_size):
+    if key_size < 4:
+        hash = slug.dll.small_hash
+    elif key_size % 4 == 0:
+        hash = slug.dll.hash
+    else:
+        hash = slug.dll.hybrid_hash
+    return hash

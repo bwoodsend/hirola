@@ -28,7 +28,13 @@ def test_modulo():
 
 def test_hash():
     x = np.array([123, 4234, 213], dtype=np.int32)
-    assert slug.dll.hash(ptr(x), 12) == np.bitwise_xor.reduce(x * 0x0B070503)
+    out = np.int32(0)
+    old = np.seterr(over="ignore")
+    for i in range(3):
+        out ^= x[i] * np.int32(0x10001)
+        out *= np.int32(0x0B070503)
+    np.seterr(**old)
+    assert slug.dll.hash(ptr(x), 12) == out
 
 
 def test_walk_through():
@@ -43,7 +49,7 @@ def test_walk_through():
 
     hash = slug.dll.hash(ptr(data), self.key_size)
     for i in range(2):
-        assert slug.dll.HT_hash_for(self._raw._ptr, ptr(data)) \
+        assert slug.dll.HT_hash_for(self._raw._ptr, ptr(data), False) \
                == hash % self.max
         assert self._add(data) == 0
         assert self.length == 1
