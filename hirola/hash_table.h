@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
+#include <stdbool.h>
 
 
 typedef int32_t (*Hash)(void * key, const size_t key_size);

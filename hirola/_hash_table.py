@@ -232,6 +232,31 @@ class HashTable(object):
             from hirola.exceptions import HashTableDestroyed
             raise HashTableDestroyed
 
+    def resize(self, new_size) -> 'hirola.HashTable':
+        """Copy the contents of this table into a new :class:`HashTable` of a
+        different size.
+
+        Args:
+            new_size:
+                The new value for :attr:`max`.
+        Returns:
+            A new hash table with attributes :attr:`keys` and :attr:`length`
+            matching those from this table.
+        Raises:
+            ValueError:
+                If requested size is too small (:py:`new_size < len(table)`).
+
+        """
+        self._check_destroyed()
+        if new_size < self.length:
+            raise ValueError(f"Requested size {new_size} is too small to fit "
+                             f"{self.length} keys.")
+        # This is only marginally (10-20%) faster than just creating an empty
+        # table and running `new.add(self.keys)`.
+        new = type(self)(new_size, self.dtype)
+        slug.dll.HT_copy_keys(self._raw._ptr, new._raw._ptr)
+        return new
+
 
 def choose_hash(key_size):
     if key_size < 4:

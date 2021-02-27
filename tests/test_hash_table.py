@@ -188,3 +188,17 @@ def test_destroy():
         self.add(.8)
     with pytest.raises(exceptions.HashTableDestroyed):
         self.get(.5)
+
+
+def test_resize():
+    self = HashTable(5, int)
+    self.add([4, 3, 2, 9])
+
+    with pytest.raises(ValueError, match=".* size 3 is .* fit 4 keys"):
+        self.resize(3)
+
+    for new_size in [4, 10]:
+        smaller = self.resize(new_size)
+        assert smaller.length == self.length
+        assert np.array_equal(smaller.keys, self.keys)
+        assert smaller.max == new_size
