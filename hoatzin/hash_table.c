@@ -3,6 +3,10 @@
 #include "hash_table.h"
 
 
+// Prototypes.
+ptrdiff_t HT__claim(HashTable * self, void * key, ptrdiff_t _hash);
+
+
 ptrdiff_t euclidean_modulo(ptrdiff_t x, ptrdiff_t base) {
   /* Python style modulo.
      Unlike C modulo, the output is still >= 0 for negative input. */
@@ -12,7 +16,7 @@ ptrdiff_t euclidean_modulo(ptrdiff_t x, ptrdiff_t base) {
 }
 
 
-ptrdiff_t HT_hash_for(HashTable * self, void * key) {
+ptrdiff_t HT_hash_for(HashTable * self, void * key, bool its_not_there) {
   /* Either find **key**'s hash if **key** is in `self->keys` or
      choose an unused hash. */
 
@@ -36,11 +40,13 @@ ptrdiff_t HT_hash_for(HashTable * self, void * key) {
     //      keys[hash_owners[_hash]] == key
     // Be careful here, memcmp() is really meant for sorting and it returns 0
     // if they are equal. 1 or -1 otherwise.
-    if (!memcmp(self->keys + self->key_size * self->hash_owners[_hash],
-                key, self->key_size)) {
-        // **key** is already in the table. Return this hash which can be used
-        // to locate the **key**.
-        return _hash;
+    if (!its_not_there) {
+      if (!memcmp(self->keys + self->key_size * self->hash_owners[_hash],
+                  key, self->key_size)) {
+          // **key** is already in the table. Return this hash which can be
+          // used to locate the **key**.
+          return _hash;
+       }
      }
 
     // Otherwise keep incrementing `_hash` until we either find a space or a
@@ -58,11 +64,18 @@ ptrdiff_t HT_add(HashTable * self, void * key) {
 
   // Check **key**'s hash in `self->hash_owners` (assuming this key is in the
   // table).
-  ptrdiff_t _hash = HT_hash_for(self, key);
+  ptrdiff_t _hash = HT_hash_for(self, key, false);
 
   // Safety check: If it's not there and there's not more space to put it in,
   // escape. This will be raised as an error in Python.
   if (_hash == -1) return -1;
+
+  return HT__claim(self, key, _hash);
+}
+
+
+inline ptrdiff_t HT__claim(HashTable * self, void * key, ptrdiff_t _hash) {
+  /* Write **key** to the table under the hash **_hash**. */
 
   // Lookup the owner of the hash. This will be the location **key** if it's in
   // the table or -1 otherwise (no owner).
@@ -86,8 +99,20 @@ ptrdiff_t HT_add(HashTable * self, void * key) {
 }
 
 
+inline ptrdiff_t HT_add_new(HashTable * self, void * key) {
+  /* Add **key** to the table without checking if it isn't already in it.
+     Returns its location. Can lead to corruption if **key** is already
+     present. */
+
+  // This is identical to HT_add() but with the **its_not_there** argument to
+  // HT_hash_for() set to true.
+  ptrdiff_t _hash = HT_hash_for(self, key, true);
+  return HT__claim(self, key, _hash);
+}
+
+
 ptrdiff_t HT_get(HashTable * self, void * key) {
-  ptrdiff_t _hash = HT_hash_for(self, key);
+  ptrdiff_t _hash = HT_hash_for(self, key, false);
   if (_hash == -1)
     return -1;
   return self->hash_owners[_hash];
@@ -114,4 +139,13 @@ ptrdiff_t HT_gets(HashTable * self, void * keys, ptrdiff_t * out, size_t len) {
     out[i] = HT_get(self, keys + (i * self->key_size));
   }
   return 0;
+}
+
+
+void HT_copy_keys(HashTable * self, HashTable * other) {
+  /* Vectorised copy contents from **self** into **other** without checking if
+     each key is already there. */
+  for (size_t i = 0; i < self->length; i++) {
+    HT_add_new(other, self->keys + (i * self->key_size));
+  }
 }
