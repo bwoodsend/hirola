@@ -169,6 +169,12 @@ def test(dtype, sort, batch):
     assert np.all(self.add(values) == ids)
 
 
+def test_non_int_max():
+    max = HashTable(3.5, int).max
+    assert isinstance(max, int)
+    assert max == 3
+
+
 def test_destroy():
     self = HashTable(10, float)
     self.add([.3, .5, .8])
