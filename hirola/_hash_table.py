@@ -68,6 +68,7 @@ class HashTable(object):
             # Zero-sized tables get in the way of modulo.
             # Negative-sized tables obviously don't make sense.
             max = 1
+        max = int(max)
 
         self._hash_owners = np.full(max, -1, np.intp)
         self._keys = np.empty(max, dtype=self.dtype)
