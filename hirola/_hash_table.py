@@ -257,6 +257,28 @@ class HashTable(object):
         slug.dll.HT_copy_keys(self._raw._ptr, new._raw._ptr)
         return new
 
+    def copy(self, usable=True) -> 'hirola.HashTable':
+        """Deep copy this table.
+
+        Args:
+            usable:
+                If set to false and this table has called :meth:`destroy`, then
+                the destroyed state is propagated to copies.
+        Returns:
+            Another :class:`HashTable` with the same size, dtype and content.
+
+        """
+        out = type(self)(self.max, self.dtype)
+        if self._destroyed and usable:
+            out.add(self.keys)
+        else:
+            out._raw.length = self._raw.length
+            out._destroyed = self._destroyed
+            out._hash_owners[:] = self._hash_owners
+            out._keys[:out._raw.length] = self.keys
+
+        return out
+
 
 def choose_hash(key_size):
     if key_size < 4:

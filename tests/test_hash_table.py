@@ -202,3 +202,26 @@ def test_resize():
         assert smaller.length == self.length
         assert np.array_equal(smaller.keys, self.keys)
         assert smaller.max == new_size
+
+
+def test_copy():
+    self = HashTable(10, int)
+    self.add(range(3, 8))
+    copy = self.copy()
+    assert copy._destroyed is False
+    assert copy.keys.tolist() == self.keys.tolist()
+    self.add(9)
+    assert 9 in self.keys
+    assert 9 not in copy.keys
+    copy.add(0)
+
+    keys = self.destroy()
+    copy = self.copy(usable=False)
+    assert copy._destroyed is True
+    assert copy.keys.tolist() == self.keys.tolist()
+    keys[0] = 5
+    assert copy.keys[0] == 3
+
+    copy = self.copy(usable=True)
+    assert copy._destroyed is False
+    assert copy.keys.tolist() == [5, 4, 6, 7, 9]
