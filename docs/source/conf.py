@@ -24,6 +24,10 @@ sys.path.insert(0, os.path.abspath('../..'))
 
 import hoatzin
 
+# Hack private import paths to prevent autodoc being confused by HashTable's
+# originating from `hoatzin._hash_table` rather than `hoatzin`.
+hoatzin.HashTable.__module__ = "hoatzin"
+
 # -- General configuration ---------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -39,6 +43,7 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.autosectionlabel',
     'sphinx.ext.intersphinx',
+    'sphinx_autodoc_typehints',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
