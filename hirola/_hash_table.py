@@ -233,7 +233,7 @@ class HashTable(object):
             from hirola.exceptions import HashTableDestroyed
             raise HashTableDestroyed
 
-    def resize(self, new_size) -> 'hirola.HashTable':
+    def resize(self, new_size) -> 'HashTable':
         """Copy the contents of this table into a new :class:`HashTable` of a
         different size.
 
@@ -258,7 +258,7 @@ class HashTable(object):
         slug.dll.HT_copy_keys(self._raw._ptr, new._raw._ptr)
         return new
 
-    def copy(self, usable=True) -> 'hirola.HashTable':
+    def copy(self, usable=True) -> 'HashTable':
         """Deep copy this table.
 
         Args:
