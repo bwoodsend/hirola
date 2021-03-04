@@ -30,18 +30,6 @@ class HashTable(object):
 
     """
     _keys: np.ndarray
-    dtype: np.dtype
-    """The data type for the table's keys.
-
-    Use structured dtypes to indicate that several numbers make up a single key.
-
-    - Individual float keys: :py:`HashTable(100, np.float64)`.
-    - Triplets of floats keys: :py:`HashTable(100, (np.float64, 3))`.
-    - Strings of up to 20 characters: :py:`HashTable(100, (str, 20))`.
-    - Mixed types records data:
-      :py:`HashTable(100, [("firstname", str, 20), ("lastname", str, 20), ("age", int)])`.
-
-    """
 
     def __init__(self, max: Number, dtype: dtype_types):
         """
@@ -58,7 +46,7 @@ class HashTable(object):
         to a minimum of 1 if it is less than 1.
 
         """
-        self.dtype = np.dtype(dtype)
+        self._dtype = np.dtype(dtype)
         key_size = self.dtype.itemsize
         self._base_dtype, self._dtype_shape = self.dtype.base, self.dtype.shape
         if self._base_dtype == object:
@@ -92,6 +80,24 @@ class HashTable(object):
 
         """
         return self._raw.max
+
+    @property
+    def dtype(self) -> np.dtype:
+        """The data type for the table's keys.
+
+        Use a structured :class:`numpy.dtype` to indicate that several numbers
+        make up a single key.
+
+        Examples:
+
+            - Individual float keys: :py:`HashTable(100, np.float64)`.
+            - Triplets of floats keys: :py:`HashTable(100, (np.float64, 3))`.
+            - Strings of up to 20 characters: :py:`HashTable(100, (str, 20))`.
+            - Mixed types records data:
+              :py:`HashTable(100, [("firstname", str, 20), ("lastname", str, 20), ("age", int)])`.
+
+        """
+        return self._dtype
 
     @property
     def key_size(self) -> int:
