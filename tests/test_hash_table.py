@@ -133,6 +133,38 @@ def test_invalid_array():
     assert HashTable(-10, int).max == 1
 
 
+def test_string_like():
+    self = HashTable(10, "U5")
+
+    # Molly-coddle the types.
+    assert self.add(np.array("bear", self.dtype)) == 0
+    # Should convert from Python str without complaint.
+    assert self.get("bear\x00") == 0
+    # Should implicitly add trailing NULLs.
+    assert self.get("bear") == 0
+    # Should be case sensitive.
+    assert self.get("Bear") == -1
+
+    # NumPy implicitly truncates overlong strings. Accept this behaviour.
+    assert self._check_dtype("tigers") == "tiger"
+    assert self.add(["tigers"]) == 1
+    assert self.keys[1] == "tiger"
+
+    # Make absolutely darn certain that hirola's C code never comes into
+    # contact with strings of random lengths.
+    normed, shape = self._norm_input_keys(["cat", "dog", "hippopotamus"])
+    assert normed.dtype == "U5"
+    assert shape == (3,)
+    assert normed.tolist() == ["cat", "dog", "hippo"]
+
+    # NumPy implicitly converts non-strings to string. Accept this too although
+    # is probably a bad idea for floats.
+    for (i, key) in enumerate((1, 100, 10000000, .123, 1 / 9), start=len(self)):
+        key_ = self._check_dtype(key)
+        assert key_ == str(key)[:5]
+        assert self.add(key) == i
+
+
 @pytest.mark.parametrize("dtype", DTYPES)
 @pytest.mark.parametrize("sort", [False, True])
 @pytest.mark.parametrize("batch", [False, True])
