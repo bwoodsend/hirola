@@ -106,6 +106,7 @@ autodoc_default_options = {
     'special-members': '__init__',
     'undoc-members': True,
 }
+autodoc_member_order = 'groupwise'
 
 # -- Options for HTML output -------------------------------------------
 
