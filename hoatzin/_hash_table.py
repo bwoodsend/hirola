@@ -51,6 +51,9 @@ class HashTable(object):
         self._base_dtype, self._dtype_shape = self.dtype.base, self.dtype.shape
         if self._base_dtype == object:
             raise TypeError("Object arrays are not permitted.")
+        if self._base_dtype.kind in "SUV":
+            # String-like types are checked differently.
+            self._check_dtype = self._check_str_dtype
 
         if max <= 0:
             # Zero-sized tables get in the way of modulo.
@@ -187,10 +190,15 @@ class HashTable(object):
     __getitem__ = get
 
     def _check_dtype(self, keys):
-        if not np.issubdtype(keys.dtype, self._base_dtype):
+        keys = np.asarray(keys, order="C")
+        if keys.dtype != self._base_dtype:
             raise TypeError(
                 "The dtype must match the dtype of the hash table. Expecting {}"
                 " but got {}.".format(self._base_dtype, keys.dtype))
+        return keys
+
+    def _check_str_dtype(self, keys):
+        return np.asarray(keys, dtype=self.dtype, order="C")
 
     def _norm_input_keys(self, keys):
         """Prepare input to be fed to C.
@@ -201,9 +209,8 @@ class HashTable(object):
 
         """
         self._check_destroyed()
+        keys = self._check_dtype(keys)
 
-        keys = np.asarray(keys, order="C")
-        self._check_dtype(keys)
         if self._dtype_shape:
             split = keys.ndim - len(self._dtype_shape)
             if keys.shape[split:] != self._dtype_shape:
