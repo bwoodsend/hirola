@@ -2,15 +2,7 @@
 Hirola
 =======
 
-..
-    This site auto-generates the little python version badges from url.
-    The required  format is:
-    https://img.shields.io/badge/[text_block_1]-[text_block_2]-[html_named_color].svg
-
-    It helps to pad with spaces. Characters need to be url escaped (can be done
-    using urllib).
-
-    from urllib.parse import quote
+..  from urllib.parse import quote
     "https://img.shields.io/badge/"
     quote("Python- {}-blue.svg".format(" | ".join(["3.6", "3.7", "3.8", "3.9"])))
 
@@ -18,32 +10,43 @@ Hirola
     https://img.shields.io/badge/
     Python-%203.6%20%7C%203.7%20%7C%203.8%20%7C%203.9-blue.svg
 
-NumPy vectorized hash table for fast set and dict operations.
+NumPy vectorized hash table written in C for fast (roughly 10x faster) ``set``/``dict``
+like operations.
 
-* Free software: MIT license
-* Documentation: https://hirola.readthedocs.io/
-* Source: https://github.com/bwoodsend/hirola/
+* Free software: `MIT license <https://github.com/bwoodsend/hirola/blob/master/LICENSE>`_
+* Documentation: `<https://hirola.readthedocs.io/>`_
+* Source code: `<https://github.com/bwoodsend/hirola/>`_
+* Releases: `<https://pypi.org/project/hirola/>`_
+
+A ``hirola.HashTable`` is to ``dict`` what ``numpy.array`` is to ``list``.
+By imposing some constraints, vectorising, and translating into C, the speed
+can be improved dramatically.
+These constraints are:
+
+* Keys must all be of the same predetermined type and size.
+* The maximum size of a table must be chosen in advance.
+* To get any performance boost, operations should be done in bulk.
+* Elements can not be removed.
+
+If any of the above are not satisfied for your use case then don't use
+hirola.
+
+.. highlight:: python
 
 
 Installation
 ------------
 
-Releases are hosted on PyPI_. To install Hirola, run
-the following in your terminal:
+Install Hirola with pip:
 
 .. code-block:: console
 
     pip install hirola
 
-.. _PyPI: https://pypi.org/project/hirola/
-
 
 Quickstart
 ----------
 
-Check out our `quickstart page on readthedocs
-<https://hirola.readthedocs.io/en/latest/quickstart.html>`_
-to get started.
 
 
 Credits
