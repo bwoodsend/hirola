@@ -163,7 +163,7 @@ class HashTable(object):
                 f"Failed to add element {keys[index]} (index {index}) to the "
                 f"hash table because the table is full and {keys[index]} "
                 f"isn't already in it.")
-        return out
+        return out if shape else out.item()
 
     def get(self, keys) -> np.ndarray:
         """Lookup indices of **keys** in :attr:`keys`.
@@ -185,7 +185,7 @@ class HashTable(object):
         keys, shape = self._norm_input_keys(keys)
         out = np.empty(shape, np.intp)
         slug.dll.HT_gets(self._raw._ptr, ptr(keys), ptr(out), out.size)
-        return out
+        return out if shape else out.item()
 
     __getitem__ = get
 
