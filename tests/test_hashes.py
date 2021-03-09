@@ -5,8 +5,17 @@
 import numpy as np
 import pytest
 
-from hoatzin._hash_table import slug, ptr, choose_hash
+from hoatzin._hash_table import slug, ptr, choose_hash, vectorise_hash
 from tests import generate as gen
+
+
+def test_vectorised_hash():
+    hash = slug.dll.hash
+    keys = gen.random(10)
+    key_size = keys.dtype.itemsize * keys.shape[1]
+    hashes = np.array([hash(ptr(i), key_size) for i in keys])
+    hashes_ = vectorise_hash(hash, key_size, keys)
+    assert np.array_equal(hashes_, hashes)
 
 
 def collisions(hashes: np.ndarray, N: int, cumulative=True):
@@ -41,7 +50,8 @@ def test_collisions(generate, table_size: int, dtype):
     x = generate(1000).astype(dtype)
     key_size = x.dtype.itemsize * x[0].size
     hash = choose_hash(key_size)
-    hashes = np.array([hash(ptr(i), key_size) for i in x])
+
+    hashes = vectorise_hash(hash, key_size, x)
     c = collisions(hashes, table_size)
 
     # Ideally we want to drive this threshold as low as possible.

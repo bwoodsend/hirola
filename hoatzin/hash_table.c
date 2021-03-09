@@ -149,3 +149,11 @@ void HT_copy_keys(HashTable * self, HashTable * other) {
     HT_add_new(other, self->keys + (i * self->key_size));
   }
 }
+
+
+void vectorise_hash(Hash hash, void * keys, int32_t * hashes, size_t key_size,
+                    size_t length) {
+  /* Apply a hash() function to an array of **keys**. Only used for testing. */
+  for (size_t i = 0; i < length; i++)
+    hashes[i] = hash(keys + i * key_size, key_size);
+}
