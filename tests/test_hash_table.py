@@ -70,6 +70,9 @@ def test_walk_through():
     assert self.get(data).tolist() == [0, 1, 0, 2, 3, 4, 2, -1]
     assert self[data].tolist() == [0, 1, 0, 2, 3, 4, 2, -1]
 
+    assert isinstance(self.add(data[0]), int)
+    assert isinstance(self.get(data[0]), int)
+
     with pytest.raises(exceptions.HashTableFullError,
                        match=r"element 107\.0 \(index 7\) "):
         self.add(data)
