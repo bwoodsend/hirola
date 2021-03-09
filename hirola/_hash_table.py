@@ -302,3 +302,13 @@ def choose_hash(key_size):
     else:
         hash = slug.dll.hybrid_hash
     return hash
+
+
+def vectorise_hash(hash, key_size, keys):
+    """Apply a hash() function to an array of **keys**. Only used for testing.
+    """
+    keys = np.ascontiguousarray(keys)
+    out = np.empty(keys.size * keys.dtype.itemsize // key_size, dtype=np.int32)
+    slug.dll.vectorise_hash(ctypes.cast(hash, ctypes.c_void_p), ptr(keys),
+                            ptr(out), key_size, out.size)
+    return out
