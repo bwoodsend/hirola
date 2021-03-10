@@ -9,6 +9,9 @@ It also of course depends on exactly what code you compare.
 """
 
 import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__, "..", "..").resolve()))
 
 import numpy as np
 from sloth.simple import time_callable  # pip install sloth-speedtest
