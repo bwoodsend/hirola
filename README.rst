@@ -47,6 +47,138 @@ Install Hoatzin with pip:
 Quickstart
 ----------
 
+``HashTable``
+*************
+
+At the rawest and dirtiest level lives the ``HashTable`` class.
+A ``HashTable`` can be though of as a ``dict`` but with only an enumeration for
+values.
+To construct an empty hash table::
+
+    import numpy as np
+    from hoatzin import HashTable
+
+    table = HashTable(
+        20,  # <--- Maximum size for the table - up to 20 keys.
+        "U10",  # <--- NumPy dtype - strings of up to 10 characters.
+    )
+
+Keys may be added individually... ::
+
+    >>> table.add("cat")
+    0
+
+... But it's much more efficient to add in bulk.
+The return value is an enumeration of when each key was first added.
+Duplicate keys are not re-added. ::
+
+    >>> table.add(["dog", "cat", "moose", "gruffalo"])
+    array([1, 0, 2, 3])
+
+
+Multidimensional inputs give multidimensional outputs of matching shapes. ::
+
+    >>> table.add([["rabbit", "cat"],
+    ...            ["gruffalo", "moose"],
+    ...            ["werewolf", "gremlin"]])
+    array([[4, 0],
+           [3, 2],
+           [5, 6]])
+
+Inspect all keys added so far via the ``keys`` attribute.
+(Note that, unlike ``dict.keys()``, it's a property instead of a method.) ::
+
+    >>> table.keys
+    array(['cat', 'dog', 'moose', 'gruffalo', 'rabbit', 'werewolf', 'gremlin'],
+          dtype='<U10')
+
+Key indices can be retrieved with ``table.get(key)`` or just ``table[key]``.
+Again, retrieval is NumPy vectorised and is much faster if given large arrays of
+inputs rather than one at a time. ::
+
+    >>> table.get("dog")
+    1
+    >>> table[["moose", "gruffalo"]]
+    array([2, 3])
+
+Unlike Python dict, keys which are missing return ``-1`` instead of raising a
+``KeyError``. ::
+
+    >>> table["tortoise"]
+    -1
+
+
+Choosing a ``max`` size
+.......................
+
+Unlike Python's ``set`` and ``dict``, ``Hoatzin`` does not manage its size
+automatically.
+You have full control of and responsibility for how much space the table uses.
+This is to prevent wasted resizing (which is what Python does under the hood).
+Obviously the table has to be large enough to fit all the keys in it.
+Additionally, when a hash table gets to close to full it becomes much slower.
+Depending on how much you favour speed over memory you should add 20-50% extra
+headroom.
+If you intend to a lot of looking up of the same small set of values then it can
+continue to run faster if you increase ``max`` to 2-3x its minimal size.
+
+
+Structured key data types
+.........................
+
+To indicate that an array axis should be considered as a single key,
+use NumPy's structured dtypes.
+In the following example, the data type ``(points.dtype, 3)``
+indicates that a 3D point - a triplet of floats -
+should be considered as one object.
+See ``help(HashTable.dtype)`` for more information of specifying dtypes.
+Only the last axis or last axes may be thought of as single keys.
+For other setups, first convert with ``numpy.transpose()``.
+
+.. code-block:: python
+
+    import numpy as np
+    from hoatzin import HashTable
+
+    # Create a cloud of 3D points with duplicates. This is 3000 points in total,
+    # with up to 1000 unique points.
+    points = np.random.uniform(-30, 30, (1000, 3))[np.random.choice(1000, 3000)]
+
+    # Create an empty hash table.
+    # In practice, you generally don't know how many unique elements there are
+    # so we'll pretend we don't either an assume the worst case of all 3000 are
+    # unique. We'll also give 25% padding for speed.
+    table = HashTable(len(points) * 1.25, (points.dtype, 3))
+
+    # Add all points to the table.
+    ids = table.add(points)
+
+Duplicate-free contents can be accessed from ``table.keys``:
+
+.. code-block:: python
+
+    >>> table.keys  # <--- These are `points` but with no duplicates.
+    array([[  3.47736554, -15.17112511,  -9.51454466],
+           [ -6.46948046,  23.64504329, -16.25743105],
+           [-27.02527253, -16.1967225 , -10.11544157],
+           ...,
+           [  3.75972597,   1.24130412,  -8.14337206],
+           [-13.62256791,  11.76551455, -13.31312988],
+           [  0.19851678,   4.06221179, -22.69006592]])
+    >>> table.keys.shape
+    (954, 3)
+
+Each point's location in ``table.keys`` is returned by ``table.add()``,
+similarly to ``numpy.unique(..., return_args=True)``.
+
+.. code-block:: python
+
+    >>> ids  # <--- These are the indices in `table.keys` of each point in `points`.
+    array([  0,   1,   2, ..., 290, 242, 669])
+    >>> np.array_equal(table.keys[ids], points)
+    True
+
+Lookup the indices of points without adding them using ``table.get()``.
 
 
 Credits
