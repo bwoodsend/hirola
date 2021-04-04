@@ -16,6 +16,12 @@ ptrdiff_t euclidean_modulo(ptrdiff_t x, ptrdiff_t base) {
 }
 
 
+#ifdef COUNT_COLLISIONS
+// Used for debugging hash collisions.
+size_t collisions = 0;
+#endif
+
+
 ptrdiff_t HT_hash_for(HashTable * self, void * key, bool its_not_there) {
   /* Either find **key**'s hash if **key** is in `self->keys` or
      choose an unused hash. */
@@ -48,6 +54,10 @@ ptrdiff_t HT_hash_for(HashTable * self, void * key, bool its_not_there) {
           return _hash;
        }
      }
+
+    #ifdef COUNT_COLLISIONS
+    collisions += 1;
+    #endif
 
     // Otherwise keep incrementing `_hash` until we either find a space or a
     // match.
