@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 """
+
+import numbers
 import ctypes
 
 from numbers import Number
@@ -30,6 +32,7 @@ class HashTable(object):
 
     """
     _keys: np.ndarray
+    _NO_DEFAULT = object()
 
     def __init__(self, max: Number, dtype: dtype_types):
         """
@@ -164,12 +167,15 @@ class HashTable(object):
                 f"isn't already in it.")
         return out if shape else out.item()
 
-    def get(self, keys) -> np.ndarray:
+    def get(self, keys, default=-1) -> np.ndarray:
         """Lookup indices of **keys** in :attr:`keys`.
 
         Arguments:
             keys:
                 Elements to search for.
+            default:
+                Returned inplace of a missing key.
+                May be any object.
         Returns:
             The index/indices of **keys** in this table's :attr:`keys`. If a
             key is not there, returns :py:`-1` in its place.
@@ -183,7 +189,34 @@ class HashTable(object):
         """
         keys, shape = self._norm_input_keys(keys)
         out = np.empty(shape, np.intp)
-        slug.dll.HT_gets(self._raw._ptr, ptr(keys), ptr(out), out.size)
+        # This function forks out to several similar C functions depending on
+        # how missing keys are to be handled.
+
+        if default is self._NO_DEFAULT:
+            # Default disabled - raise a key error if anything is missing.
+            index = slug.dll.HT_gets_no_default(self._raw._ptr, ptr(keys),
+                                                ptr(out), out.size)
+            if index != -1:
+                source, value = self._blame_key(index, keys, shape)
+                raise KeyError(f"{source} = {value} is not in this table.")
+
+        elif isinstance(default, numbers.Integral):
+            if default == -1:
+                # The default behaviour - use -1 to indicate missing keys.
+                # This is already how the underlying C functions communicate
+                # missing keys so nothing special needs to be done.
+                slug.dll.HT_gets(self._raw._ptr, ptr(keys), ptr(out), out.size)
+            else:
+                # Not the default of -1 but still an integer default which can
+                # be handled faster in C.
+                slug.dll.HT_gets_default(self._raw._ptr, ptr(keys), ptr(out),
+                                         out.size, default)
+
+        else:
+            # The slowest case: Return some non integer user defined default.
+            slug.dll.HT_gets(self._raw._ptr, ptr(keys), ptr(out), out.size)
+            out = np.where(out == -1, default, out)
+
         return out if shape else out.item()
 
     @staticmethod
@@ -198,7 +231,8 @@ class HashTable(object):
         index = np.unravel_index(index, shape)
         return ("keys[" + ', '.join(map(str, index)) + "]"), repr(keys[index])
 
-    __getitem__ = get
+    def __getitem__(self, key):
+        return self.get(key, default=self._NO_DEFAULT)
 
     def _check_dtype(self, keys):
         keys = np.asarray(keys, order="C")

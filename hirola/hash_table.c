@@ -154,6 +154,35 @@ ptrdiff_t HT_gets(HashTable * self, void * keys, ptrdiff_t * out, size_t len) {
 }
 
 
+ptrdiff_t HT_gets_no_default(HashTable * self, void * keys,
+    ptrdiff_t * out, size_t len) {
+  /* Like HT_gets() but returns an error code if a key is missing. */
+
+  for (size_t i = 0; i < len; i++) {
+    ptrdiff_t index = HT_get(self, keys + (i * self->key_size));
+    if (index == -1)
+      // This key is missing. Return its location which will be included in the
+      // error message raised by Python.
+      return i;
+    out[i] = index;
+  }
+  // Return -1 to indicate that no keys were missing.
+  return -1;
+}
+
+
+void HT_gets_default(HashTable * self, void * keys,
+    ptrdiff_t * out, size_t len, size_t default_) {
+  /* Like HT_gets() but allows a user defined default for missing keys. */
+
+  for (size_t i = 0; i < len; i++) {
+    ptrdiff_t index = HT_get(self, keys + (i * self->key_size));
+    if (index == -1) index = default_;
+    out[i] = index;
+  }
+}
+
+
 void HT_copy_keys(HashTable * self, HashTable * other) {
   /* Vectorised copy contents from **self** into **other** without checking if
      each key is already there. */
