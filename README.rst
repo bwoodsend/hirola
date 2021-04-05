@@ -101,11 +101,19 @@ inputs rather than one at a time. ::
     >>> table[["moose", "gruffalo"]]
     array([2, 3])
 
-Unlike Python dict, keys which are missing return ``-1`` instead of raising a
-``KeyError``. ::
+Like the Python dict,
+using ``table[key]`` raises a ``KeyError`` if keys are missing
+but using ``table.get(key)`` returns a configurable default.
+Unlike Python's dict, the default is ``-1``. ::
 
     >>> table["tortoise"]
+    KeyError: "key = 'tortoise' is not in this table."
+    >>> table.get("tortoise")
     -1
+    >>> table.get("tortoise", default=99)
+    99
+    >>> table.get(["cat", "bear", "tortoise"], default=[100, 101, 102])
+    array([  0, 101, 102])
 
 
 Choosing a ``max`` size

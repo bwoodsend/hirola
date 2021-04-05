@@ -68,7 +68,7 @@ def test_walk_through():
 
     assert self.add(data[:7]).tolist() == [0, 1, 0, 2, 3, 4, 2]
     assert self.get(data).tolist() == [0, 1, 0, 2, 3, 4, 2, -1]
-    assert self[data].tolist() == [0, 1, 0, 2, 3, 4, 2, -1]
+    assert self[data[:-1]].tolist() == [0, 1, 0, 2, 3, 4, 2]
 
     assert isinstance(self.add(data[0]), int)
     assert isinstance(self.get(data[0]), int)
@@ -212,6 +212,39 @@ def test_non_int_max():
     max = HashTable(3.5, int).max
     assert isinstance(max, int)
     assert max == 3
+
+
+def test_getting():
+    """Test HashTable().get() both with and without defaults and
+    HashTable().__getitem__()."""
+    self = HashTable(10, (str, 10))
+    assert self.add(["duck", "goose", "chicken"]).tolist() == [0, 1, 2]
+
+    # The default default of -1.
+    assert self.get("pigeon") == -1
+    assert self.get(["goose", "pigeon", "parrot"]).tolist() == [1, -1, -1]
+
+    # User defined integer default.
+    assert self.get("pigeon", default=10) == 10
+    assert self.get(["pigeon", "goose", "parrot"], default=5).tolist() \
+           == [5, 1, 5]
+
+    # User defined random object default.
+    default = object()
+    assert self.get("toad", default=default) is default
+    assert self.get(["chicken", "toad"], default=default).tolist() \
+           == [2, default]
+    assert self.get("toad", default=None) is None
+
+    # Defaulting disabled. Currently a private option.
+    with pytest.raises(KeyError, match=r"key = 'troll' is not"):
+        self.get("troll", default=self._NO_DEFAULT)
+
+    # __getitem__() disables the default.
+    assert self["chicken"] == 2
+    assert self[["chicken", "duck"]].tolist() == [2, 0]
+    with pytest.raises(KeyError):
+        self["toad"]
 
 
 def test_destroy():
