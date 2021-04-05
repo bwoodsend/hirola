@@ -74,12 +74,16 @@ def test_walk_through():
     assert isinstance(self.get(data[0]), int)
 
     with pytest.raises(exceptions.HashTableFullError,
-                       match=r"element 107\.0 \(index 7\) "):
+                       match=r".* add keys\[7\] = 107\.0 to .* and 107\.0 is"):
         self.add(data)
 
     with pytest.raises(exceptions.HashTableFullError,
-                       match=r"element 107\.0 \(index \(1, 3\)\) "):
+                       match=r".* add keys\[1, 3\] = 107\.0 to .* and 107\.0 "):
         self.add(data.reshape((2, 4)))
+
+    with pytest.raises(exceptions.HashTableFullError,
+                       match=r".* add key = 107\.0 to .* and 107\.0 is"):
+        self.add(data[7])
 
 
 SHAPES = [(), (10,), (0, 10), (10, 0), (10, 10), (10, 10, 10)]

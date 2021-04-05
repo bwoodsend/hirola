@@ -4,7 +4,7 @@
 import ctypes
 
 from numbers import Number
-from typing import Union
+from typing import Union, Tuple
 
 import numpy as np
 from cslug import CSlug, ptr, anchor, Header
@@ -157,11 +157,10 @@ class HashTable(object):
         index = slug.dll.HT_adds(self._raw._ptr, ptr(keys), ptr(out), out.size)
         if index != -1:
             from hoatzin.exceptions import HashTableFullError
-            if len(shape) != 1:
-                index = np.unravel_index(index, shape)
+            source, value = self._blame_key(index, keys, shape)
             raise HashTableFullError(
-                f"Failed to add element {keys[index]} (index {index}) to the "
-                f"hash table because the table is full and {keys[index]} "
+                f"Failed to add {source} = {value} to the "
+                f"hash table because the table is full and {value} "
                 f"isn't already in it.")
         return out if shape else out.item()
 
@@ -186,6 +185,18 @@ class HashTable(object):
         out = np.empty(shape, np.intp)
         slug.dll.HT_gets(self._raw._ptr, ptr(keys), ptr(out), out.size)
         return out if shape else out.item()
+
+    @staticmethod
+    def _blame_key(index, keys, shape) -> Tuple[str, str]:
+        """Get a key and its location from a ravelled index. Used to prettify
+        key errors."""
+        assert index >= 0
+        if len(shape) == 0:
+            return "key", repr(keys.item())
+        if len(shape) == 1:
+            return f"keys[{index}]", repr(keys[index])
+        index = np.unravel_index(index, shape)
+        return ("keys[" + ', '.join(map(str, index)) + "]"), repr(keys[index])
 
     __getitem__ = get
 
