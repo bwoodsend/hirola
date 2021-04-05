@@ -27,13 +27,13 @@ ptrdiff_t HT_hash_for(HashTable * self, void * key, bool its_not_there) {
      choose an unused hash. */
 
   // Get an initial hash for `key`.
-  ptrdiff_t _hash = euclidean_modulo(self -> hash(key, self->key_size),
-                                     self->max);
+  ptrdiff_t __hash = self -> hash(key, self->key_size);
 
   // Search, starting from our initial hash:
   for (size_t j = 0; j < self->max; j++) {
     // Provided the hash function self->hash() is working well for the input
     // data, this loop should rarely require more than one iteration.
+    ptrdiff_t _hash = euclidean_modulo(__hash, self->max);
 
     // If _hash is unclaimed:
     if (self->hash_owners[_hash] == -1) {
@@ -59,9 +59,11 @@ ptrdiff_t HT_hash_for(HashTable * self, void * key, bool its_not_there) {
     collisions += 1;
     #endif
 
-    // Otherwise keep incrementing `_hash` until we either find a space or a
+    // Otherwise keep incrementing `__hash` until we either find a space or a
     // match.
-    _hash = (_hash + 1) % self->max;
+    // Incrementing with a ridiculously big prime number instead of just adding
+    // 1 helps to break up clusters of collisions (albeit inconsistently).
+    __hash = euclidean_modulo(__hash + 118394396737867, self->max);
   }
 
   return -1;
