@@ -73,6 +73,7 @@ def counts_with(generate, table_size: int, dtype):
 
 per_test_collisions = {}
 
+
 @pytest.mark.parametrize("generate", [gen.random, gen.permutative, gen.id_like])
 @pytest.mark.parametrize("table_size", range(1245, 1255))
 @pytest.mark.parametrize("dtype", [np.int8, np.int16, np.int32, np.int64])
@@ -98,7 +99,7 @@ def test_aggregate_collisions(generate, table_size: int, dtype):
     self.add(x)
     collisions = collisions_ptr.contents.value - old
 
-    assert collisions < 20000
+    assert collisions < 10000
     per_test_collisions[gen, table_size, dtype] = collisions
 
 
