@@ -189,6 +189,77 @@ similarly to ``numpy.unique(..., return_args=True)``.
 Lookup the indices of points without adding them using ``table.get()``.
 
 
+Recipes
+*******
+
+A ``HashTable`` can be used to replicate a `dict`_, `set`_ or a
+`collections.Counter`_.
+These might turn into their own proper classes in the future or they might not.
+
+
+.. _dict:
+
+Using a ``HashTable`` as a ``dict``
+...................................
+
+A ``dict`` requires a second array for values.
+The output of ``HashTable.add()``  and ``HashTable.get()`` should be used as
+indices of ``values``:
+
+.. code-block:: python
+
+    import numpy as np
+    from hoatzin import HashTable
+
+    # The `keys` - will be populated with names of African countries.
+    countries = HashTable(40, (str, 20))
+    # The `values` - will be populated with the names of each country's capital city.
+    capitals = np.empty(countries.max, (str, 20))
+
+Add or set items using the pattern ``values[table.add(key)] = value``::
+
+    capitals[countries.add("Algeria")] = "Al Jaza'ir"
+
+Or in bulk::
+
+    new_keys = ["Angola", "Botswana", "Burkina Faso"]
+    new_values = ["Luanda", "Gaborone", "Ouagadougou"]
+    capitals[countries.add(new_keys)] = new_values
+
+Like Python dicts, overwriting values is exactly the same as writing them.
+
+Retrieve values with ``values[table[key]]``::
+
+    >>> capitals[countries["Botswana"]]
+    'Gaborone'
+    >>> capitals[countries["Botswana", "Algeria"]]
+    array(['Gaborone', "Al Jaza'ir"], dtype='<U20')
+
+View all keys and values with ``table.keys`` and ``values[:len(table)]``.
+A ``HashTable`` remembers the order keys were first added so this dict is
+automatically a sorted dict.
+
+::
+
+    # keys
+    >>> countries.keys
+    array(['Algeria', 'Angola', 'Botswana', 'Burkina Faso'], dtype='<U20')
+    # values
+    >>> capitals[:len(countries)]
+    array(["Al Jaza'ir", 'Luanda', 'Gaborone', 'Ouagadougou'], dtype='<U20')
+
+Depending on the usage scenario,
+it may or may not make sense to want a ``dict.items()`` equivalent.
+In which case use ``numpy.rec.fromarrays([table.keys, values[:len(table)]])``,
+possibly adding a ``names=`` option::
+
+    >>> np.rec.fromarrays([countries.keys, capitals[:len(countries)]],
+    ...                   names="countries,capitals")
+    rec.array([('Algeria', "Al Jaza'ir"), ('Angola', 'Luanda'),
+               ('Botswana', 'Gaborone'), ('Burkina Faso', 'Ouagadougou')],
+              dtype=[('countries', '<U20'), ('capitals', '<U20')])
+
+
 A Minor Security Implication
 ----------------------------
 
