@@ -308,6 +308,60 @@ From the above it is easy to derive:
                 7, 14, 28, 35, 49, 56, 70, 77, 91, 98])
 
 
+.. _`collections.Counter`:
+
+Using a ``HashTable`` as a ``collections.Counter``
+..................................................
+
+For this example,
+let's give ourselves something a bit more substantial to work on.
+The full text of Shakespeare's Hamlet play will do::
+
+    from urllib.request import urlopen
+    import re
+    import numpy as np
+
+    hamlet = urlopen("https://gist.githubusercontent.com/provpup/2fc41686eab7400b796b/raw/b575bd01a58494dfddc1d6429ef0167e709abf9b/hamlet.txt").read()
+    words = np.array(re.findall(rb"([\w']+)", hamlet))
+
+A counter is just a ``dict`` with integer values and a ``dict`` is just a hash
+table with a separate array for values. ::
+
+    from hirola import HashTable
+
+    word_table = HashTable(len(words), words.dtype)
+    counts = np.zeros(word_table.max, dtype=int)
+
+The only new functionality that is not defined in `using a hash table as a dict
+<dict>`_ is the ability to count keys as they are added.
+To count new elements use the rather odd line
+``np.add(counts, table.add(keys), 1)``. ::
+
+    np.add.at(counts, word_table.add(words), 1)
+
+This line does what you might expect ``counts[word_table.add(words)] += 1`` to
+do but, due to the way NumPy works,
+the latter form fails to increment each count more than once if ``words``
+contains duplicates.
+
+Use NumPy's indirect sorting functions to get most or least common keys. ::
+
+    # Get the most common word.
+    >>> word_table.keys[counts[:len(word_table)].argmax()]
+    b'the'
+
+    # Get the top 10 most common words. Note that these are unsorted.
+    >>> word_table.keys[counts[:len(word_table)].argpartition(-10)[-10:]]
+    array([b'it', b'and', b'my', b'of', b'in', b'a', b'to', b'the', b'I',
+           b'you'], dtype='|S14')
+
+    # Get all words in ascending order of commonness.
+    >>> word_table.keys[counts[:len(word_table)].argsort()]
+    array([b'END', b'whereat', b"griev'd", ..., b'to', b'and', b'the'],
+          dtype='|S14')
+
+
+
 A Minor Security Implication
 ----------------------------
 
