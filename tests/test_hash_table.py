@@ -303,3 +303,24 @@ def test_copy():
     copy = self.copy(usable=True)
     assert copy._destroyed is False
     assert copy.keys.tolist() == [5, 4, 6, 7, 9]
+
+
+def test_in():
+    """Test HashTable().contains() and ``x in table``."""
+    self = HashTable(10, int)
+    self.add([20, 5, 50, 3, 4])
+
+    assert self.contains(50) is True
+    assert self.contains(51) is False
+
+    assert self.contains([20, 4, 10, 99, 12]).tolist() == \
+        [True, True, False, False, False]
+    assert self.contains([[3, 5], [2, 1]]).tolist() == \
+        [[True, True], [False, False]]
+
+    assert 3 in self
+    assert not 9 in self
+
+    with pytest.raises(ValueError):
+        # Not allowed by Python.
+        [1, 2] in self
