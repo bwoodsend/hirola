@@ -167,6 +167,29 @@ class HashTable(object):
                 f"isn't already in it.")
         return out if shape else out.item()
 
+    def contains(self, keys) -> Union[bool, np.ndarray]:
+        """Check if a key or keys are in the table.
+
+        Args:
+            keys:
+                Elements to check for.
+        Returns:
+            Either true or false for each key in **keys**.
+
+        This function is equivalent to but faster than
+        :py:`table.get(keys) != -1`.
+        To check only one key you may also use :py:`key in table`.
+
+        """
+        self._check_destroyed()
+
+        keys, shape = self._norm_input_keys(keys)
+        out = np.empty(shape, bool)
+        slug.dll.HT_contains(self._raw._ptr, ptr(keys), ptr(out), out.size)
+        return out if shape else out.item()
+
+    __contains__ = contains
+
     def get(self, keys, default=-1) -> np.ndarray:
         """Lookup indices of **keys** in :attr:`keys`.
 

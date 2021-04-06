@@ -183,6 +183,14 @@ void HT_gets_default(HashTable * self, void * keys,
 }
 
 
+void HT_contains(HashTable * self, void * keys, bool * out, size_t len) {
+  /* Vectorised are ``keys in table``? For set().union()-like operations. */
+  for (size_t i = 0; i < len; i++) {
+    out[i] = HT_get(self, keys + (i * self->key_size)) != -1;
+  }
+}
+
+
 void HT_copy_keys(HashTable * self, HashTable * other) {
   /* Vectorised copy contents from **self** into **other** without checking if
      each key is already there. */
