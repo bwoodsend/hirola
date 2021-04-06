@@ -260,6 +260,54 @@ possibly adding a ``names=`` option::
               dtype=[('countries', '<U20'), ('capitals', '<U20')])
 
 
+.. _set:
+
+Using a ``HashTable`` as a ``set``
+..................................
+
+To get set-like capabilities from a ``HashTable``,
+leverage the ``contains()`` method.
+For these examples we will experiment with integer multiples of 3 and 7. ::
+
+    import numpy as np
+
+    of_3s = np.arange(0, 100, 3)
+    of_7s = np.arange(0, 100, 7)
+
+We'll only require one array to be converted into a hash table.
+The other can remain as an array. ::
+
+    from hoatzin import HashTable
+
+    table = HashTable(len(of_3s) * 1.25, of_3s.dtype)
+    table.add(of_3s)
+
+Use ``table.contains()`` as a vectorised version of ``in``. ::
+
+    >>> table.contains(of_7s)
+    array([ True, False, False,  True, False, False,  True, False, False,
+            True, False, False,  True, False, False])
+
+From the above it is easy to derive:
+
+*   Shared values ``set.intersection()``::
+
+        >>> of_7s[table.contains(of_7s)]
+        array([ 0, 21, 42, 63, 84])
+
+*   Values not in the table (set subtraction)::
+
+        >>> of_7s[~table.contains(of_7s)]
+        array([ 7, 14, 28, 35, 49, 56, 70, 77, 91, 98])
+
+*   Values in either the table or in the tested array ``set.union()``::
+
+        >>> np.concatenate([table.keys, of_7s[~table.contains(of_7s)]], axis=0)
+        array([ 0,  3,  6,  9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48,
+               51, 54, 57, 60, 63, 66, 69, 72, 75, 78, 81, 84, 87, 90, 93, 96, 99,
+                7, 14, 28, 35, 49, 56, 70, 77, 91, 98])
+
+
 A Minor Security Implication
 ----------------------------
 
