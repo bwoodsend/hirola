@@ -29,6 +29,9 @@ setup(
     ],
     description="NumPy vectorized hash table for fast set and dict operations.",
     install_requires=copy_requirements(),
+    entry_points={
+        "pyinstaller40": "hook-dirs=hoatzin:_PyInstaller_hook_dir",
+    },
     extras_require={
         "test": [
             'pytest>=3', 'pytest-order', 'coverage', 'pytest-cov',
