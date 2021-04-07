@@ -2,6 +2,10 @@
 """
 """
 
+import os
+import sys
+import runpy
+
 import pytest
 import numpy as np
 from cslug import ptr
@@ -324,3 +328,17 @@ def test_in():
     with pytest.raises(ValueError):
         # Not allowed by Python.
         [1, 2] in self
+
+
+def test_PyInstaller_hook():
+    if getattr(sys, "_frozen", False):
+        pytest.skip("")
+
+    from hirola import _PyInstaller_hook_dir
+    hook_dir, = _PyInstaller_hook_dir()
+    assert os.path.isdir(hook_dir)
+    hook = os.path.join(hook_dir, "hook-hirola.py")
+    assert os.path.isfile(hook)
+
+    namespace = runpy.run_path(hook)
+    assert len(namespace["datas"]) == 2

@@ -59,3 +59,10 @@ jobs:
 
       - name: Test
         run: pytest
+
+      # Test PyInstaller.
+      - run: pip install pyinstaller
+      - working-directory: tests/PyInstaller_
+        run: pyinstaller frozen-pytest.spec
+      - working-directory: tests/PyInstaller_
+        run: ./dist/frozen-pytest/frozen-pytest ../..
