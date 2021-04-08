@@ -4,7 +4,6 @@
     :maxdepth: 2
     :caption: Contents:
 
-    getting-started
     reference/api
 
 
