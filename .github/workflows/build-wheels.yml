@@ -1,0 +1,71 @@
+---
+name: Build Wheels
+
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  macOS-Windows:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-11.0, windows-latest]
+
+    steps:
+
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v1
+        with:
+          python-version: 3.9
+
+      - run: pip wheel --no-deps -w dist .
+
+      # Build for macOS arm64. Hopefully I'll think of a better way to do this.
+      - if: startsWith(matrix.os, 'macos')
+        run: |
+          pip wheel --no-deps -w temp .
+          mv temp/*.whl "dist/$(ls temp/ | sed 's/x86_64/arm64/')"
+        env:
+          CC_FLAGS: -arch arm64
+          MACOS_DEPLOYMENT_TARGET: '11.0'
+
+      - name: Upload wheel(s) as build artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: wheels
+          path: dist/*.whl
+
+  Linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+
+      - uses: actions/checkout@v2
+      - uses: crazy-max/ghaction-docker-buildx@v3.3.0
+
+      - run: docker build -t x86_64 --build-arg BASE=manylinux1_x86_64 .
+      - run: docker build -t i686 --build-arg BASE=manylinux1_i686 .
+      - run: docker build -t aarch64 --build-arg BASE=manylinux2014_aarch64 .
+
+      - run: |
+          cat >build-wheel.sh <<EOL
+          #!/usr/bin/env bash
+          rm -rf build
+          python setup.py -q bdist_wheel -d ~/wheels
+          auditwheel repair ~/wheels/*.whl -w dist
+          EOL
+          chmod 777 build-wheel.sh
+
+      - run: docker run -v "`pwd`:/io" x86_64 bash /io/build-wheel.sh
+      - run: docker run -v "`pwd`:/io" i686 bash /io/build-wheel.sh
+      - run: docker run -v "`pwd`:/io" aarch64 bash /io/build-wheel.sh
+
+      - name: Upload wheel(s) as build artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: wheels
+          path: dist/*.whl
