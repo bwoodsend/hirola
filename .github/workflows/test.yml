@@ -43,11 +43,11 @@ jobs:
       - name: Cache pip cached wheels
         uses: actions/cache@v2
         env:
-          cache-name: cache-node-modules
+          cache-name: ${{ matrix.os }}
         with:
           path: pip-cache
-          key: restore-key
-          restore-keys: restore-key
+          key: ${{ matrix.os }}
+          restore-keys: ${{ matrix.os }}
 
       - name: Install
         run: |
