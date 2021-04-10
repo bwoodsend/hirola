@@ -31,8 +31,6 @@ These constraints are:
 If any of the above are not satisfied for your use case then don't use
 hirola.
 
-.. highlight:: python
-
 
 Installation
 ------------
