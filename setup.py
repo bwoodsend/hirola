@@ -40,6 +40,7 @@ setup(
     },
     license="MIT license",
     long_description=readme,
+    long_description_content_type='text/x-rst',
     package_data={
         "hoatzin": ["*" + CSLUG_SUFFIX, "*.json"],
     },
