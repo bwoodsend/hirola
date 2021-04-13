@@ -251,6 +251,37 @@ def test_getting():
         self["toad"]
 
 
+def test_blame_key_multidimensional():
+    """Test that the custom KeyErrors work for non scalar keys. """
+
+    # Create a hash table for float triplets.
+    self = HashTable(10, dtype=(float, 3))
+    keys = np.arange(24, dtype=float).reshape((-1, 3))
+    # Add all but the last key.
+    self.add(keys[:-1])
+
+    # Try getting the last key. The resultant key errors should always point to
+    # the correct one being missing.
+    with pytest.raises(KeyError, match=r"key = array\(\[21., 22., 23.\]\) is"):
+        self[keys[-1]]
+    with pytest.raises(KeyError, match=r"keys\[7\] = array\(\[21"):
+        self[keys]
+    with pytest.raises(KeyError, match=r"keys\[3, 1\] = array\(\[21"):
+        self[keys.reshape((4, 2, 3))]
+
+
+def test_blame_key_structured():
+    """Similar to test_blame_key_multidimensional() but for struct dtypes."""
+    self = HashTable(10, dtype=[("name", str, 10), ("age", int)])
+    keys = np.array([("bill", 10), ("bob", 12), ("ben", 13)], self.dtype)
+    self.add(keys[:-1])
+
+    with pytest.raises(KeyError, match=r"key = \('ben', 13\) is"):
+        self[keys[-1]]
+    with pytest.raises(KeyError, match=r"keys\[2\] = \('ben', 13\) is"):
+        self[keys]
+
+
 def test_destroy():
     self = HashTable(10, float)
     self.add([.3, .5, .8])
