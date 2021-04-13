@@ -242,12 +242,13 @@ class HashTable(object):
 
         return out if shape else out.item()
 
-    @staticmethod
-    def _blame_key(index, keys, shape) -> Tuple[str, str]:
+    def _blame_key(self, index, keys, shape) -> Tuple[str, str]:
         """Get a key and its location from a ravelled index. Used to prettify
         key errors."""
         assert index >= 0
         if len(shape) == 0:
+            if self._dtype_shape:
+                return "key", repr(keys)
             return "key", repr(keys.item())
         if len(shape) == 1:
             return f"keys[{index}]", repr(keys[index])
