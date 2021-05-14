@@ -35,16 +35,11 @@ hirola.
 Installation
 ------------
 
-Install Hirola with pip.
-Unfortunately, releases are not yet on PyPI.
-Select the link for your OS from `Github releases
-<https://github.com/bwoodsend/hirola/releases/latest>`_,
-copy its link location then paste it after ``pip install``.
-e.g.
+Install Hirola with pip:
 
 .. code-block:: console
 
-    pip install https://github.com/bwoodsend/hirola/releases/download/0.1.0/hirola-0.1.0-py3-none-macosx_10_6_x86_64.whl
+    pip install hirola
 
 
 Quickstart
