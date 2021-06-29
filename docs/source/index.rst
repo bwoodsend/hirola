@@ -5,6 +5,7 @@
     :caption: Contents:
 
     reference/api
+    changelog
 
 
 Indices and tables
