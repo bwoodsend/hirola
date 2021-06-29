@@ -51,7 +51,9 @@ Quickstart
 At the rawest and dirtiest level lives the ``HashTable`` class.
 A ``HashTable`` can be though of as a ``dict`` but with only an enumeration for
 values.
-To construct an empty hash table::
+To construct an empty hash table:
+
+.. code-block:: python
 
     import numpy as np
     from hirola import HashTable
@@ -61,20 +63,26 @@ To construct an empty hash table::
         "U10",  # <--- NumPy dtype - strings of up to 10 characters.
     )
 
-Keys may be added individually... ::
+Keys may be added individually...
+
+.. code-block:: python
 
     >>> table.add("cat")
     0
 
 ... But it's much more efficient to add in bulk.
 The return value is an enumeration of when each key was first added.
-Duplicate keys are not re-added. ::
+Duplicate keys are not re-added.
+
+.. code-block:: python
 
     >>> table.add(["dog", "cat", "moose", "gruffalo"])
     array([1, 0, 2, 3])
 
 
-Multidimensional inputs give multidimensional outputs of matching shapes. ::
+Multidimensional inputs give multidimensional outputs of matching shapes.
+
+.. code-block:: python
 
     >>> table.add([["rabbit", "cat"],
     ...            ["gruffalo", "moose"],
@@ -84,7 +92,9 @@ Multidimensional inputs give multidimensional outputs of matching shapes. ::
            [5, 6]])
 
 Inspect all keys added so far via the ``keys`` attribute.
-(Note that, unlike ``dict.keys()``, it's a property instead of a method.) ::
+(Note that, unlike ``dict.keys()``, it's a property instead of a method.)
+
+.. code-block:: python
 
     >>> table.keys
     array(['cat', 'dog', 'moose', 'gruffalo', 'rabbit', 'werewolf', 'gremlin'],
@@ -92,7 +102,9 @@ Inspect all keys added so far via the ``keys`` attribute.
 
 Key indices can be retrieved with ``table.get(key)`` or just ``table[key]``.
 Again, retrieval is NumPy vectorised and is much faster if given large arrays of
-inputs rather than one at a time. ::
+inputs rather than one at a time.
+
+.. code-block:: python
 
     >>> table.get("dog")
     1
@@ -102,7 +114,9 @@ inputs rather than one at a time. ::
 Like the Python dict,
 using ``table[key]`` raises a ``KeyError`` if keys are missing
 but using ``table.get(key)`` returns a configurable default.
-Unlike Python's dict, the default is ``-1``. ::
+Unlike Python's dict, the default is ``-1``.
+
+.. code-block:: python
 
     >>> table["tortoise"]
     KeyError: "key = 'tortoise' is not in this table."
@@ -214,11 +228,15 @@ indices of ``values``:
     # The `values` - will be populated with the names of each country's capital city.
     capitals = np.empty(countries.max, (str, 20))
 
-Add or set items using the pattern ``values[table.add(key)] = value``::
+Add or set items using the pattern ``values[table.add(key)] = value``:
+
+.. code-block:: python
 
     capitals[countries.add("Algeria")] = "Al Jaza'ir"
 
-Or in bulk::
+Or in bulk:
+
+.. code-block:: python
 
     new_keys = ["Angola", "Botswana", "Burkina Faso"]
     new_values = ["Luanda", "Gaborone", "Ouagadougou"]
@@ -226,7 +244,9 @@ Or in bulk::
 
 Like Python dicts, overwriting values is exactly the same as writing them.
 
-Retrieve values with ``values[table[key]]``::
+Retrieve values with ``values[table[key]]``:
+
+.. code-block:: python
 
     >>> capitals[countries["Botswana"]]
     'Gaborone'
@@ -237,7 +257,9 @@ View all keys and values with ``table.keys`` and ``values[:len(table)]``.
 A ``HashTable`` remembers the order keys were first added so this dict is
 automatically a sorted dict.
 
-::
+:
+
+.. code-block:: python
 
     # keys
     >>> countries.keys
@@ -249,7 +271,9 @@ automatically a sorted dict.
 Depending on the usage scenario,
 it may or may not make sense to want a ``dict.items()`` equivalent.
 In which case use ``numpy.rec.fromarrays([table.keys, values[:len(table)]])``,
-possibly adding a ``names=`` option::
+possibly adding a ``names=`` option:
+
+.. code-block:: python
 
     >>> np.rec.fromarrays([countries.keys, capitals[:len(countries)]],
     ...                   names="countries,capitals")
@@ -265,7 +289,9 @@ Using a ``HashTable`` as a ``set``
 
 To get set-like capabilities from a ``HashTable``,
 leverage the ``contains()`` method.
-For these examples we will experiment with integer multiples of 3 and 7. ::
+For these examples we will experiment with integer multiples of 3 and 7.
+
+.. code-block:: python
 
     import numpy as np
 
@@ -273,14 +299,18 @@ For these examples we will experiment with integer multiples of 3 and 7. ::
     of_7s = np.arange(0, 100, 7)
 
 We'll only require one array to be converted into a hash table.
-The other can remain as an array. ::
+The other can remain as an array.
+
+.. code-block:: python
 
     from hirola import HashTable
 
     table = HashTable(len(of_3s) * 1.25, of_3s.dtype)
     table.add(of_3s)
 
-Use ``table.contains()`` as a vectorised version of ``in``. ::
+Use ``table.contains()`` as a vectorised version of ``in``.
+
+.. code-block:: python
 
     >>> table.contains(of_7s)
     array([ True, False, False,  True, False, False,  True, False, False,
@@ -288,17 +318,23 @@ Use ``table.contains()`` as a vectorised version of ``in``. ::
 
 From the above it is easy to derive:
 
-*   Shared values ``set.intersection()``::
+*   Shared values ``set.intersection()``:
+
+.. code-block:: python
 
         >>> of_7s[table.contains(of_7s)]
         array([ 0, 21, 42, 63, 84])
 
-*   Values not in the table (set subtraction)::
+*   Values not in the table (set subtraction):
+
+.. code-block:: python
 
         >>> of_7s[~table.contains(of_7s)]
         array([ 7, 14, 28, 35, 49, 56, 70, 77, 91, 98])
 
-*   Values in either the table or in the tested array ``set.union()``::
+*   Values in either the table or in the tested array ``set.union()``:
+
+.. code-block:: python
 
         >>> np.concatenate([table.keys, of_7s[~table.contains(of_7s)]], axis=0)
         array([ 0,  3,  6,  9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48,
@@ -313,7 +349,9 @@ Using a ``HashTable`` as a ``collections.Counter``
 
 For this example,
 let's give ourselves something a bit more substantial to work on.
-The full text of Shakespeare's Hamlet play will do::
+The full text of Shakespeare's Hamlet play will do:
+
+.. code-block:: python
 
     from urllib.request import urlopen
     import re
@@ -323,7 +361,9 @@ The full text of Shakespeare's Hamlet play will do::
     words = np.array(re.findall(rb"([\w']+)", hamlet))
 
 A counter is just a ``dict`` with integer values and a ``dict`` is just a hash
-table with a separate array for values. ::
+table with a separate array for values.
+
+.. code-block:: python
 
     from hirola import HashTable
 
@@ -333,7 +373,9 @@ table with a separate array for values. ::
 The only new functionality that is not defined in `using a hash table as a dict
 <dict>`_ is the ability to count keys as they are added.
 To count new elements use the rather odd line
-``np.add(counts, table.add(keys), 1)``. ::
+``np.add(counts, table.add(keys), 1)``.
+
+.. code-block:: python
 
     np.add.at(counts, word_table.add(words), 1)
 
@@ -342,7 +384,9 @@ do but, due to the way NumPy works,
 the latter form fails to increment each count more than once if ``words``
 contains duplicates.
 
-Use NumPy's indirect sorting functions to get most or least common keys. ::
+Use NumPy's indirect sorting functions to get most or least common keys.
+
+.. code-block:: python
 
     # Get the most common word.
     >>> word_table.keys[counts[:len(word_table)].argmax()]
