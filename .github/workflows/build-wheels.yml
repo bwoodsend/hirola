@@ -3,17 +3,18 @@ name: Build Wheels
 
 on:
   workflow_dispatch:
-  push:
 
 jobs:
-  macOS-Windows:
+  Standard:
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-11.0, windows-latest]
-
+        os: [macos-11.0, windows-latest, ubuntu-latest]
+        architecture: [x64]
+        include:
+          - os: windows-latest
+            architecture: x86
     steps:
 
       - uses: actions/checkout@v2
@@ -21,17 +22,42 @@ jobs:
       - uses: actions/setup-python@v1
         with:
           python-version: 3.9
+          architecture: ${{ matrix.architecture }}
+
+      - name: Install clang
+        if: startsWith(matrix.os, 'windows')
+        uses: bwoodsend/setup-winlibs-action@v1
+        with:
+          architecture: ${{ matrix.architecture }}
+          with_clang: true
+
+      # Compile with clang by default which produces faster binaries.
+      - run: echo CC=clang >> $GITHUB_ENV
+      # macOS needs special compiler flags to enable 'universal2' binaries.
+      - if: startsWith(matrix.os, 'macos')
+        run: CC_FLAGS='-arch x86_64 -arch arm64' >> $GITHUB_ENV
+
+      # Check the compiler. Don't fail if CC isn't set.
+      - run: ${CC:-echo} -v
+        shell: bash
 
       - run: pip wheel --no-deps -w dist .
 
-      # Build for macOS arm64. Hopefully I'll think of a better way to do this.
+      # Build a universal2 wheel for macOS to support both arm64 and x86_64.
+      # Hopefully I'll think of a better way to do this and add it to cslug.
       - if: startsWith(matrix.os, 'macos')
         run: |
-          pip wheel --no-deps -w temp .
-          mv temp/*.whl "dist/$(ls temp/ | sed 's/x86_64/arm64/')"
-        env:
-          CC_FLAGS: -arch arm64
-          MACOS_DEPLOYMENT_TARGET: '11.0'
+          mv dist/*.whl "dist/$(ls dist/ | sed 's/x86_64/universal2/')"
+
+      # Build a wheel for modern x86_64 Linux using clang (which produces
+      # a faster binary than gcc).
+      - if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          pip install auditwheel
+          export OLD_WHEEL="$(echo dist/*.whl)"
+          # When glibc on CI updates, update the manylinux variant as needed.
+          auditwheel repair "$OLD_WHEEL" --plat=manylinux2014_x86_64 -w dist
+          rm $OLD_WHEEL
 
       - name: Upload wheel(s) as build artifacts
         uses: actions/upload-artifact@v2
@@ -39,33 +65,55 @@ jobs:
           name: wheels
           path: dist/*.whl
 
-  Linux:
+      - name: Test Wheel
+        run: |
+          pip install "$(echo dist/*.whl)[test]" &&
+          rm -rf hirola &&
+          pytest --no-cov
+        shell: bash
+
+  Whacky-Linux:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    strategy:
+      matrix:
+        base: [
+          manylinux1_x86_64,
+          manylinux1_i686,
+          manylinux2014_aarch64,
+          # Support these when NumPy provides wheels for them.
+          # manylinux2014_ppc64le,
+          # manylinux2014_s390x,
+        ]
     steps:
 
       - uses: actions/checkout@v2
       - uses: crazy-max/ghaction-docker-buildx@v3.3.0
 
-      - run: docker build -t x86_64 --build-arg BASE=manylinux1_x86_64 .
-      - run: docker build -t i686 --build-arg BASE=manylinux1_i686 .
-      - run: docker build -t aarch64 --build-arg BASE=manylinux2014_aarch64 .
+      - name: Build docker image
+        run: |
+          docker build -t bob-the-builder --build-arg BASE=${{ matrix.base }} .
 
-      - run: |
-          cat >build-wheel.sh <<EOL
-          #!/usr/bin/env bash
-          rm -rf build
-          python setup.py -q bdist_wheel -d ~/wheels
-          auditwheel repair ~/wheels/*.whl -w dist
-          EOL
-          chmod 777 build-wheel.sh
-
-      - run: docker run -v "`pwd`:/io" x86_64 bash /io/build-wheel.sh
-      - run: docker run -v "`pwd`:/io" i686 bash /io/build-wheel.sh
-      - run: docker run -v "`pwd`:/io" aarch64 bash /io/build-wheel.sh
+      - name: Build wheel
+        run: |
+          docker run -v "$(pwd):/io" bob-the-builder bash -c "
+            rm -rf build /tmp/dist
+            python setup.py -q bdist_wheel -d /tmp/dist
+            auditwheel repair /tmp/dist/*.whl -w dist
+          "
 
       - name: Upload wheel(s) as build artifacts
         uses: actions/upload-artifact@v2
         with:
           name: wheels
           path: dist/*.whl
+
+      - name: Install and test wheel
+        run: |
+          docker run -v "$(pwd)/tests:/tests" -v "$(pwd)/dist:/dist" \
+          -t bob-the-builder bash -c "
+            cd ~ &&
+            pip uninstall -y hirola &&
+            # Note that this assumes that there is only one wheel in dist.
+            pip install /dist/hirola*manylinux*.whl &&
+            pytest /tests
+          "
