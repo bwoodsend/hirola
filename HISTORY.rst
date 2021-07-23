@@ -5,6 +5,12 @@ Changelog
 Release history for :mod:`hirola`.
 
 
+v0.2.1
+------
+
+*   Fix macOS wheels to include ARM64 binaries as well a x86_64.
+
+
 v0.2.0
 -------
 
