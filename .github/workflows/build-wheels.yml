@@ -35,7 +35,7 @@ jobs:
       - run: echo CC=clang >> $GITHUB_ENV
       # macOS needs special compiler flags to enable 'universal2' binaries.
       - if: startsWith(matrix.os, 'macos')
-        run: CC_FLAGS='-arch x86_64 -arch arm64' >> $GITHUB_ENV
+        run: echo CC_FLAGS='-arch x86_64 -arch arm64' >> $GITHUB_ENV
 
       # Check the compiler. Don't fail if CC isn't set.
       - run: ${CC:-echo} -v
