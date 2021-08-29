@@ -404,8 +404,8 @@ Use NumPy's indirect sorting functions to get most or least common keys.
 
 
 
-A Minor Security Implication
-----------------------------
+A Security Note
+---------------
 
 Unlike the builtin ``hash()`` used internally by Python's ``set`` and ``dict``,
 ``hirola`` does not randomise a hash seed on startup
@@ -413,13 +413,16 @@ making an online server running ``hirola`` more vulnerable to denial of service
 attacks.
 In such an attack, the attacker clogs up your server by sending it requests that
 he/she knows will cause hash collisions and therefore slow it down.
-You can make this considerably more difficult by adding a little
+Whereas a Python hash table's size is always predictably the next power of 8
+above ``len(table) * 3 / 2``, a ``hirola.HashTable()`` may be any size meaning
+that you can make an attack considerably more difficult by adding a little
 randomness to the sizes of your hash tables.
 But if your writing an online server
 which performs dictionary lookup based on user input
 and your user-base doesn't like you much
 or you have some very spiteful below-the-belt competitors
 then I recommend that you don't use this library.
+
 
 Credits
 -------
