@@ -204,12 +204,12 @@ Lookup the indices of points without adding them using ``table.get()``.
 Recipes
 *******
 
-A ``HashTable`` can be used to replicate a `dict`_, `set`_ or a
-`collections.Counter`_.
+A ``HashTable`` can be used to replicate a `dict <as-a-dict>`_,
+`set <as-a-set>`_ or a `collections.Counter <as-a-collections.Counter>`_.
 These might turn into their own proper classes in the future or they might not.
 
 
-.. _dict:
+.. _as-a-dict:
 
 Using a ``HashTable`` as a ``dict``
 ...................................
@@ -282,7 +282,7 @@ possibly adding a ``names=`` option:
               dtype=[('countries', '<U20'), ('capitals', '<U20')])
 
 
-.. _set:
+.. _as-a-set:
 
 Using a ``HashTable`` as a ``set``
 ..................................
@@ -342,7 +342,7 @@ From the above it is easy to derive:
                 7, 14, 28, 35, 49, 56, 70, 77, 91, 98])
 
 
-.. _`collections.Counter`:
+.. _`as-a-collections.Counter`:
 
 Using a ``HashTable`` as a ``collections.Counter``
 ..................................................
@@ -371,7 +371,7 @@ table with a separate array for values.
     counts = np.zeros(word_table.max, dtype=int)
 
 The only new functionality that is not defined in `using a hash table as a dict
-<dict>`_ is the ability to count keys as they are added.
+<as-a-dict>`_ is the ability to count keys as they are added.
 To count new elements use the rather odd line
 ``np.add(counts, table.add(keys), 1)``.
 
