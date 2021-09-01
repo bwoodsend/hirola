@@ -22,13 +22,13 @@ dtype_types = Union[np.dtype, np.generic, type, str, list, tuple]
 class HashTable(object):
     """The raw core behind a set or a dictionary's keys.
 
-    A hash table resembles a dictionary where its keys are the :attr:`keys`
+    A hash table resembles a dictionary where its keys are the `keys`
     array but the values are an just an enumeration. It's core API:
 
-    * Use :meth:`add` to add new keys if they've not been already added.
-    * The :attr:`keys` lists all keys that have been added in the order that
+    * Use `add` to add new keys if they've not been already added.
+    * The `keys` lists all keys that have been added in the order that
       they were added.
-    * Use :meth:`get` to retrieve indices of keys in :attr:`keys`.
+    * Use `get` to retrieve indices of keys in `keys`.
 
     """
     _keys: np.ndarray
@@ -40,12 +40,12 @@ class HashTable(object):
         Args:
             max:
                 An upper bound for the number of keys which can fit in this
-                table. Sets the :attr:`max` attribute.
+                table. Sets the `max` attribute.
             dtype:
-                The data type for the table's keys. Sets the :attr:`dtype`
+                The data type for the table's keys. Sets the `dtype`
                 attribute.
 
-        The **max** parameter is silently normalised to :class:`int` and clipped
+        The **max** parameter is silently normalised to `int` and clipped
         to a minimum of 1 if it is less than 1.
 
         """
@@ -81,7 +81,7 @@ class HashTable(object):
 
         Adding keys to exceed this maximum will trigger a
         :class:`~hirola.exceptions.HashTableFullError`. Nearly full tables
-        will :meth:`add` and :meth:`get` much slower. For best performance,
+        will `add` and `get` much slower. For best performance,
         choose a maximum size which is 25-50% larger than you expect it to get.
 
         """
@@ -91,7 +91,7 @@ class HashTable(object):
     def dtype(self) -> np.dtype:
         """The data type for the table's keys.
 
-        Use a structured :class:`numpy.dtype` to indicate that several numbers
+        Use a structured `numpy.dtype` to indicate that several numbers
         make up a single key.
 
         Examples:
@@ -114,9 +114,9 @@ class HashTable(object):
     def keys(self) -> np.ndarray:
         """The unique elements in the table.
 
-        Unlike Python's builtin :class:`dict`, this :attr:`keys` is a
-        :class:`property` rather than a method. Keys must be immutable hence
-        this array is a readonly view. See :meth:`destroy` to release the
+        Unlike Python's builtin `dict`, this `keys` is a
+        `property` rather than a method. Keys must be immutable hence
+        this array is a readonly view. See `destroy` to release the
         writable version.
 
         """
@@ -140,17 +140,17 @@ class HashTable(object):
     def add(self, keys) -> np.ndarray:
         """Add **keys** to the table.
 
-        Any key which is already in :attr:`keys` is not added again. Returns
-        the index of each key in :attr:`keys` similarly to :meth:`get`.
+        Any key which is already in `keys` is not added again. Returns
+        the index of each key in `keys` similarly to `get`.
 
         Raises:
             ValueError:
                 If the :attr:`~numpy.ndarray.dtype` of **keys** doesn't match
-                the :attr:`dtype` of this table.
+                the `dtype` of this table.
             exceptions.HashTableFullError:
                 If there is no space to place new keys.
             exceptions.HashTableDestroyed:
-                If the :meth:`destroy` method has been previously called.
+                If the `destroy` method has been previously called.
 
         """
         self._check_destroyed()
@@ -191,7 +191,7 @@ class HashTable(object):
     __contains__ = contains
 
     def get(self, keys, default=-1) -> np.ndarray:
-        """Lookup indices of **keys** in :attr:`keys`.
+        """Lookup indices of **keys** in `keys`.
 
         Arguments:
             keys:
@@ -200,14 +200,14 @@ class HashTable(object):
                 Returned inplace of a missing key.
                 May be any object.
         Returns:
-            The index/indices of **keys** in this table's :attr:`keys`. If a
+            The index/indices of **keys** in this table's `keys`. If a
             key is not there, returns :py:`-1` in its place.
         Raises:
             ValueError:
                 If the :attr:`~numpy.ndarray.dtype` of **keys** doesn't match
-                the :attr:`dtype` of this table.
+                the `dtype` of this table.
             exceptions.HashTableDestroyed:
-                If the :meth:`destroy` method has been previously called.
+                If the `destroy` method has been previously called.
 
         """
         keys, shape = self._norm_input_keys(keys)
@@ -274,7 +274,7 @@ class HashTable(object):
 
         * Convert to C contiguous array if not already.
         * Check/raise for wrong dtype.
-        * For unlabelled records dtypes, right-strip :attr:`_dtype_shape`.
+        * For unlabelled records dtypes, right-strip self._dtype_shape.
 
         """
         self._check_destroyed()
@@ -291,18 +291,18 @@ class HashTable(object):
         return keys, keys.shape
 
     def destroy(self) -> np.ndarray:
-        """Release a writeable version of :attr:`keys` and permanently disable
+        """Release a writeable version of `keys` and permanently disable
         this table.
 
         Returns:
-            A writeable shallow copy of :attr:`keys`.
+            A writeable shallow copy of `keys`.
 
-        Modifying :attr:`keys` would cause an internal meltdown and is
+        Modifying `keys` would cause an internal meltdown and is
         therefore blocked by setting the writeable flag to false. However, if
         you no longer need this table then it is safe to do as you please with
-        the :attr:`keys` array. This function grants you full access to
-        :attr:`keys` but blocks you from adding to or getting from this table
-        in the future. If you want both a writeable :attr:`keys` array and
+        the `keys` array. This function grants you full access to
+        `keys` but blocks you from adding to or getting from this table
+        in the future. If you want both a writeable `keys` array and
         functional use of this table then use :py:`table.keys.copy()`.
 
         """
@@ -316,14 +316,16 @@ class HashTable(object):
             raise HashTableDestroyed
 
     def resize(self, new_size) -> 'HashTable':
-        """Copy the contents of this table into a new :class:`HashTable` of a
+        """Copy the contents of this table into a new `HashTable` of a
         different size.
 
         Args:
             new_size:
-                The new value for :attr:`max`.
+                The new value for `max`.
+            in_place:
+                If true resize this table. Otherwise make a modified copy.
         Returns:
-            A new hash table with attributes :attr:`keys` and :attr:`length`
+            A new hash table with attributes `keys` and `length`
             matching those from this table.
         Raises:
             ValueError:
@@ -345,10 +347,10 @@ class HashTable(object):
 
         Args:
             usable:
-                If set to false and this table has called :meth:`destroy`, then
+                If set to false and this table has called `destroy`, then
                 the destroyed state is propagated to copies.
         Returns:
-            Another :class:`HashTable` with the same size, dtype and content.
+            Another `HashTable` with the same size, dtype and content.
 
         """
         out = type(self)(self.max, self.dtype)

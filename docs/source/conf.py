@@ -108,6 +108,8 @@ autodoc_default_options = {
 }
 autodoc_member_order = 'groupwise'
 
+default_role = "any"
+
 # -- Options for HTML output -------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
