@@ -316,6 +316,13 @@ def test_resize():
         assert np.array_equal(smaller.keys, self.keys)
         assert smaller.max == new_size
 
+    # Test inplace resizing.
+    assert self is self.resize(6, in_place=True)
+    assert self.max == 6
+    assert self.get([5, 4, 3, 2, 3]).tolist() == [-1, 0, 1, 2, 1]
+    assert self.add(8) == 4
+    assert self.add(11) == 5
+
 
 def test_copy():
     self = HashTable(10, int)

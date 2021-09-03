@@ -315,7 +315,7 @@ class HashTable(object):
             from hirola.exceptions import HashTableDestroyed
             raise HashTableDestroyed
 
-    def resize(self, new_size) -> 'HashTable':
+    def resize(self, new_size, in_place=False) -> 'HashTable':
         """Copy the contents of this table into a new `HashTable` of a
         different size.
 
@@ -325,21 +325,35 @@ class HashTable(object):
             in_place:
                 If true resize this table. Otherwise make a modified copy.
         Returns:
-            A new hash table with attributes `keys` and `length`
-            matching those from this table.
+            Either a new hash table with attributes `keys` and `length`
+            matching those from this table or this table.
         Raises:
             ValueError:
                 If requested size is too small (:py:`new_size < len(table)`).
+
+        .. versionchanged:: 0.3.0
+            Add the **in_place** option.
 
         """
         self._check_destroyed()
         if new_size < self.length:
             raise ValueError(f"Requested size {new_size} is too small to fit "
                              f"{self.length} keys.")
+        new = type(self)(new_size, self.dtype, almost_full=self.almost_full)
         # This is only marginally (10-20%) faster than just creating an empty
         # table and running `new.add(self.keys)`.
-        new = type(self)(new_size, self.dtype)
         slug.dll.HT_copy_keys(self._raw._ptr, new._raw._ptr)
+
+        if in_place:
+            # In place resizing really just creates a resized copy then moves
+            # all the resized attributes back to the original.
+            self._raw = new._raw
+            self._keys = new._keys
+            self._hash_owners = new._hash_owners
+            self._keys_readonly = new._keys_readonly
+            self.almost_full = new.almost_full
+            return self
+
         return new
 
     def copy(self, usable=True) -> 'HashTable':
