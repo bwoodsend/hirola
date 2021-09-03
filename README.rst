@@ -7,6 +7,8 @@ Hirola
     :alt: PyPI version
     :target: https://pypi.org/project/hirola/
 
+.. image:: https://img.shields.io/badge/coverage-100%25-blue
+
 NumPy vectorized hash table written in C for fast (roughly 10x faster) ``set``/``dict``
 like operations.
 
