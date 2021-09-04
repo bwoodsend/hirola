@@ -20,10 +20,10 @@ like operations.
 A ``hirola.HashTable`` is to ``dict`` what ``numpy.array`` is to ``list``.
 By imposing some constraints, vectorising, and translating into C, the speed
 can be improved dramatically.
-These constraints are:
+For hirola, these constraints are:
 
 * Keys must all be of the same predetermined type and size.
-* The maximum size of a table must be chosen in advance.
+* The maximum size of a table must be chosen in advance and managed explicitly.
 * To get any performance boost, operations should be done in bulk.
 * Elements can not be removed.
 
@@ -132,8 +132,8 @@ Choosing a ``max`` size
 
 Unlike Python's ``set`` and ``dict``, ``Hirola`` does not manage its size
 automatically.
-You have full control of and responsibility for how much space the table uses.
-This is to prevent wasted resizing (which is what Python does under the hood).
+To prevent wasted resizing (which is what Python does under the hood),
+you have full control of and responsibility for how much space the table uses.
 Obviously the table has to be large enough to fit all the keys in it.
 Additionally, when a hash table gets to close to full it becomes much slower.
 Depending on how much you favour speed over memory you should add 20-50% extra
@@ -348,7 +348,8 @@ Using a ``HashTable`` as a ``collections.Counter``
 
 For this example,
 let's give ourselves something a bit more substantial to work on.
-The full text of Shakespeare's Hamlet play will do:
+Counting word frequencies in Shakespeare's Hamlet play is the
+trendy example for ``collections.Counter`` and it's what we'll use too.
 
 .. code-block:: python
 
