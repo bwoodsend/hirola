@@ -1,4 +1,4 @@
-.. module:: hirola
+.. py:currentmodule:: hirola
 
 ==================
 :class:`HashTable`

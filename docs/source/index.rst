@@ -1,3 +1,5 @@
+.. module:: hirola
+
 .. include:: ../../README.rst
 
 .. toctree::
