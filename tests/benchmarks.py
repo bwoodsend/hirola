@@ -39,7 +39,7 @@ def pure_numpy(data):
 
 
 def hirola(data):
-    self = HashTable(len(data) * 3 // 2, data.dtype)
+    self = HashTable(len(data) * 3 // 2, (data.dtype, data[0].shape))
     self.add(data)
 
 
