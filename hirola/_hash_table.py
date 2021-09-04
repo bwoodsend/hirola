@@ -4,6 +4,7 @@
 
 import numbers
 import ctypes
+import math
 
 from numbers import Number
 from typing import Union, Tuple
@@ -34,7 +35,8 @@ class HashTable(object):
     _keys: np.ndarray
     _NO_DEFAULT = object()
 
-    def __init__(self, max: Number, dtype: dtype_types):
+    def __init__(self, max: Number, dtype: dtype_types,
+                 almost_full=(.9, "warn")):
         """
 
         Args:
@@ -43,6 +45,9 @@ class HashTable(object):
                 table. Sets the `max` attribute.
             dtype:
                 The data type for the table's keys. Sets the `dtype`
+                attribute.
+            almost_full:
+                The handling of almost full hash tables. Sets the `almost_full`
                 attribute.
 
         The **max** parameter is silently normalised to `int` and clipped
@@ -74,6 +79,7 @@ class HashTable(object):
         self._raw = slug.dll.HashTable(max, key_size, ptr(self._hash_owners),
                                        ptr(self._keys_readonly),
                                        hash=ctypes.cast(hash, ctypes.c_void_p))
+        self.almost_full = almost_full
 
     @property
     def max(self) -> int:
@@ -151,21 +157,132 @@ class HashTable(object):
                 If there is no space to place new keys.
             exceptions.HashTableDestroyed:
                 If the `destroy` method has been previously called.
+            exceptions.AlmostFull:
+                If the table becomes nearly full and is configured to raise an
+                error (set by the `almost_full` attribute).
+        Warns:
+            exceptions.AlmostFull:
+                If the table becomes nearly full and is configured to warn (set
+                by the `almost_full` attribute).
 
         """
         self._check_destroyed()
 
         keys, shape = self._norm_input_keys(keys)
         out = np.empty(shape, np.intp)
-        index = slug.dll.HT_adds(self._raw._ptr, ptr(keys), ptr(out), out.size)
-        if index != -1:
+
+        # This while loop will only iterate a second time if the "almost full"
+        # threshold is enabled and crossed. It will only iterate more than twice
+        # if `self.almost_full` is set to automatically upsize the table.
+        index = -1
+        while True:
+            index = slug.dll.HT_adds(self._raw._ptr, ptr(keys), ptr(out),
+                                     out.size, index + 1)
+
+            # If everything worked. Return the indices.
+            if index == out.size:
+                return out if shape else out.item()
+
+            # If the `almost_full` threshold has been crossed:
+            if index < 0:
+                # Convert to a real positive index.
+                index = -1 - index
+                # Issue a warning or raise an error or resize the table as per
+                # the user's configuration.
+                self._on_almost_full()
+                continue
+
+            # We're out of space. Raise an error.
             from hirola.exceptions import HashTableFullError
             source, value = self._blame_key(index, keys, shape)
             raise HashTableFullError(
                 f"Failed to add {source} = {value} to the "
                 f"hash table because the table is full and {value} "
                 f"isn't already in it.")
-        return out if shape else out.item()
+
+    @property
+    def almost_full(self):
+        """The response to an almost full hash table. Hash tables become
+        dramatically slower, the closer they get to being full. Hirola's default
+        behaviour is to warn if this happens but can be configured to ignore the
+        warning, raise an error or automatically make a new, larger table.
+
+        This is an overloaded parameter.
+
+        * :py:`almost_full = None`:
+            Disable the *almost full* warning entirely.
+        * :py:`almost_full = (0.8, "warn")`:
+            Issue a `hirola.exceptions.AlmostFull` warning if the table reaches
+            80% full.
+        * :py:`almost_full = (0.7, "raise")`:
+            Raise a `hirola.exceptions.AlmostFull` exception if the table
+            reaches 80% full.
+        * :py:`almost_full = (0.7, 2)`:
+            Whenever the table reaches 70% full, double the table size.
+
+        For reference, Python's `dict` grows 8-fold when two thirds full.
+        To mimic this behaviour, set :py:`table.almost_full = (2 / 3, 8)`.
+
+        """
+        return self._almost_full
+
+    @almost_full.setter
+    def almost_full(self, x):
+        # Asides from simply storing the user's value, this setter must also:
+        # * Calculate the "panic table length" (self._raw.panic_at) at which the
+        #   C code should notify Python that the table is almost full.
+        # * Ensure that the user input is valid.
+
+        if x is None:
+            self._raw.panic_at = -1
+            self._almost_full = None
+            return
+
+        try:
+            ratio, scale_up = x
+        except:
+            raise TypeError(f"`almost_full` must be a 2-tuple of floats or"
+                            f" None. Not `{repr(x)}`.") from None
+        if not (0 < ratio <= 1):
+            raise ValueError("The first parameter to almost_full must be "
+                             ">0 and <=1.")
+        if isinstance(scale_up, str):
+            if scale_up not in ("raise", "warn"):
+                raise ValueError("Valid near-full actions are 'raise' and "
+                                 f"'warn'. Not '{scale_up}'.")
+        elif isinstance(scale_up, numbers.Number):
+            if int(self.max * scale_up) <= self.max:
+                raise ValueError(
+                    f"A scale_up resize factor of {scale_up} would lead to an "
+                    f"infinite loop. Either increase scale_up or disable "
+                    f"automatic resizing by setting hash_table.almost_full to "
+                    f"None.")
+        else:
+            raise TypeError("The second parameter to almost_full must be "
+                            "either a string or a float.")
+
+        self._raw.panic_at = int(math.ceil(ratio * self.max))
+        self._almost_full = x
+
+    def _on_almost_full(self):
+        """The callback to be invoked whenever the table becomes almost full."""
+        assert self.almost_full is not None
+
+        if not isinstance(self.almost_full[1], str):
+            self.resize(self.max * self.almost_full[1], in_place=True)
+            return
+
+        from hirola.exceptions import AlmostFull
+
+        message = f"HashTable() is {round(100 * len(self) / self.max)}% full." \
+                  " A hash table becomes orders of magnitudes slower " \
+                  "when nearly full. See help(HashTable.almost_full) for how " \
+                  "to correct or silence this issue."
+
+        if self.almost_full[1] == "raise":
+            raise AlmostFull(message)
+        import warnings
+        warnings.warn(AlmostFull(message), stacklevel=3)
 
     def contains(self, keys) -> Union[bool, np.ndarray]:
         """Check if a key or keys are in the table.
@@ -367,7 +484,7 @@ class HashTable(object):
             Another `HashTable` with the same size, dtype and content.
 
         """
-        out = type(self)(self.max, self.dtype)
+        out = type(self)(self.max, self.dtype, self.almost_full)
         if self._destroyed and usable:
             out.add(self.keys)
         else:

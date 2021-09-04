@@ -13,7 +13,7 @@ from cslug import ptr
 from hirola import HashTable, exceptions
 from hirola._hash_table import slug
 
-from tests import random_ids
+from tests import random_ids, ignore_almost_full_warnings, warnings_as_errors
 
 DATA = np.arange(120, dtype=np.int8).data
 DTYPES = [
@@ -41,6 +41,7 @@ def test_hash():
     assert slug.dll.hash(ptr(x), 12) == out
 
 
+@ignore_almost_full_warnings
 def test_walk_through():
     data = np.array([100, 101, 100, 103, 104, 105, 103, 107], dtype=np.float32)
     self = HashTable(5, dtype=data.dtype)
@@ -303,6 +304,7 @@ def test_destroy():
         self.get(.5)
 
 
+@ignore_almost_full_warnings
 def test_resize():
     self = HashTable(5, int)
     self.add([4, 3, 2, 9])
@@ -322,6 +324,100 @@ def test_resize():
     assert self.get([5, 4, 3, 2, 3]).tolist() == [-1, 0, 1, 2, 1]
     assert self.add(8) == 4
     assert self.add(11) == 5
+
+
+def test_almost_full():
+    """Test table.almost_full set to warn, ignore or raise errors when the hash
+    table's fullness crosses a given threshold."""
+
+    # Test the default - to warn at 90% full.
+    self = HashTable(5, int)
+    assert self.almost_full == (.9, "warn")
+    # The internal integer threshold should always round up.
+    assert self._raw.panic_at == 5
+    # Nothing should happen until we hit the 5th key.
+    with warnings_as_errors():
+        self.add(range(4))
+    with pytest.warns(exceptions.AlmostFull, match="is 100% full"):
+        self.add(4)
+
+    # Yest raising an error when nearly full.
+    self = HashTable(10, int, almost_full=(.45, "raise"))
+    assert self.almost_full == (.45, "raise")
+    with pytest.raises(exceptions.AlmostFull, match="is 50% full"):
+        self.add(range(8))
+    assert len(self) == 5
+
+    self.almost_full = .7, "warn"
+    with pytest.warns(exceptions.AlmostFull, match="is 70% full"):
+        self.add(range(10))
+    assert len(self) == 10
+
+
+def test_disabled_almost_full():
+    """Verify that no almost full warnings are produced if disabled."""
+    self = HashTable(10, int, almost_full=None)
+
+    with warnings_as_errors():
+        self.add(range(10))
+
+
+def test_almost_full_input_guards():
+    """Test the various exceptions raised by the input validators of
+    HashTable.almost_full's setter."""
+    with pytest.raises(ValueError, match=".* first .* be >0 and <=1"):
+        HashTable(10, int, almost_full=(2, "warn"))
+    with pytest.raises(ValueError, match=".* first .* >0 and <=1"):
+        HashTable(10, int, almost_full=(0, "warn"))
+    with pytest.raises(ValueError,
+                       match="Valid near-full actions are .* Not 'bean'."):
+        HashTable(10, int, almost_full=(.6, "bean"))
+    with pytest.raises(TypeError, match=".* second parameter to almost_full"):
+        HashTable(10, int, almost_full=(.6, range))
+    with pytest.raises(TypeError):
+        HashTable(10, int, almost_full="hello")
+
+
+def test_infinite_resizing_check():
+    """If automatic resizing is enabled but the resize factor is <= 1 or so
+    close to 1 that ``int(table.max * resize_factor)`` truncates to
+    ``table.max`` then we could end up in an infinite loop of no-op resizes.
+    Verify that the HashTable.almost_full setter blocks such resize factors.
+    """
+    self = HashTable(10, int, almost_full=(1, 1.1))
+    assert self.add(range(20)).tolist() == list(range(20))
+
+    with pytest.raises(ValueError, match="resize factor of 1.09 would"):
+        HashTable(10, int, almost_full=(1, 1.09))
+
+    HashTable(100, int, almost_full=(1, 1.01))
+    with pytest.raises(ValueError, match="resize factor of 1.01 would"):
+        HashTable(99, int, almost_full=(1, 1.01))
+
+    with pytest.raises(ValueError, match="resize factor"):
+        HashTable(10, int, almost_full=(1, .8))
+    with pytest.raises(ValueError, match="resize factor"):
+        HashTable(10, int, almost_full=(1, -1))
+
+
+def test_automatic_resize():
+    """Test setting self.almost_full to automatically resize the hash table."""
+    # Upsize by x1.5 when 60% full.
+    self = HashTable(10, int, almost_full=(.6, 1.5))
+
+    # 5 out of 10 is less than 60%. Nothing should have changed.
+    self.add(range(5))
+    assert self.max == 10
+
+    # Adding one extra value brings us up to 60% which should trigger a resize.
+    self.add(5)
+    assert self.max == 15
+    # No information should have been lost in the resize.
+    assert np.array_equal(self.keys, np.arange(6))
+
+    # Adding loads of new keys should call resize as many times as needed.
+    self.add(np.arange(30))
+    assert self.max == 73
 
 
 def test_copy():

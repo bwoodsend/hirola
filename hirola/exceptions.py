@@ -27,3 +27,8 @@ class HashTableDestroyed(HirolaException):
     def __str__(self):
         return "This table has been destroyed by HashTable.destroy() and can " \
                "no longer be used."
+
+
+class AlmostFull(HirolaException, Warning):
+    """To be raised or warned if the near-fullness of a hash table can lead to
+    poor performance."""

@@ -19,6 +19,7 @@ typedef struct HashTable {
   void * const keys;
   size_t length;
   Hash hash;
+  ptrdiff_t panic_at;
 } HashTable;
 
 

@@ -131,7 +131,8 @@ Choosing a ``max`` size
 .......................
 
 Unlike Python's ``set`` and ``dict``, ``Hirola`` does not manage its size
-automatically.
+automatically by default
+(although `it can be reconfigured to <automatic-resize>`_).
 To prevent wasted resizing (which is what Python does under the hood),
 you have full control of and responsibility for how much space the table uses.
 Obviously the table has to be large enough to fit all the keys in it.
@@ -198,6 +199,36 @@ similarly to ``numpy.unique(..., return_args=True)``.
     True
 
 Lookup the indices of points without adding them using ``table.get()``.
+
+
+.. _automatic-resize:
+
+Handling of nearly full hash tables
+...................................
+
+``HashTable``\ s become very slow when almost full.
+As of v0.3.0, an efficiency warning will notify you if a table exceeds 90% full.
+This warning can be reconfigured into an error, silenced or set to resize the
+table automatically to make room.
+These are demonstrated in the example constructors below:
+
+.. code-block:: python
+
+    # The default: Issue a warning when the table is 90% full.
+    HashTable(..., almost_full=(0.9, "warn"))
+
+    # Disable all "almost full" behaviours.
+    HashTable(..., almost_full=None)
+
+    # To consider a table exceeding 80% full as an error use:
+    HashTable(..., almost_full=(0.8, "raise"))
+
+    # To automatically triple in size whenever the table exceeds 80% full use:
+    HashTable(..., almost_full=(0.8, 3.0))
+
+Resizing tables is slow which is why it's not enabled by default.
+It should be avoided unless you really have no idea how big your table will need
+to be.
 
 
 Recipes

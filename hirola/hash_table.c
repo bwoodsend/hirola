@@ -135,14 +135,21 @@ ptrdiff_t HT_get(HashTable * self, void * key) {
    computation. */
 
 
-ptrdiff_t HT_adds(HashTable * self, void * keys, ptrdiff_t * out, size_t len) {
-  for (size_t i = 0; i < len; i++) {
+ptrdiff_t HT_adds(HashTable * self, void * keys, ptrdiff_t * out, ptrdiff_t len,
+                  size_t start) {
+  for (ptrdiff_t i = start; i < len; i++) {
     out[i] = HT_add(self, keys + (i * self->key_size));
-    if (out[i] == -1)
+    if (out[i] == -1) {
       // Out of space - abort.
       return i;
+    }
+    if (out[i] == self->panic_at - 1)
+       // Nearly out of space. Pass control back to Python so that it can decide
+       // what to do. Using a negative index is a signal to Python that this is
+       // nearly out of space rather than completely out of space.
+      return -i - 1;
   }
-  return -1;
+  return len;
 }
 
 
