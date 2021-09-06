@@ -362,7 +362,7 @@ def test_in():
 
 
 def test_PyInstaller_hook():
-    if getattr(sys, "_frozen", False):
+    if getattr(sys, "frozen", False):
         pytest.skip("")
 
     from hirola import _PyInstaller_hook_dir
