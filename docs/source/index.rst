@@ -1,12 +1,22 @@
 .. module:: hirola
 
 .. include:: ../../README.rst
+    :end-before: Quickstart
 
 .. toctree::
-    :maxdepth: 2
-    :caption: Contents:
+    :caption: Usage
 
-    reference/api
+    quickstart
+
+.. toctree::
+    :caption: API Reference
+
+    reference/hash_table
+    reference/exceptions
+
+.. toctree::
+    :caption: About
+
     changelog
 
 
