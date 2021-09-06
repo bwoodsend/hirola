@@ -4,6 +4,15 @@ Changelog
 
 Release history for :mod:`hirola`.
 
+v0.3.0
+------
+
+*   Add :ref:`handling of nearly full hash tables`.
+
+*   Add an **in_place** option to `HashTable.resize`.
+
+*   Improve performance by a few percent.
+
 
 v0.2.1
 ------
