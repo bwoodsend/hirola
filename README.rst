@@ -256,8 +256,6 @@ View all keys and values with ``table.keys`` and ``values[:len(table)]``.
 A ``HashTable`` remembers the order keys were first added so this dict is
 automatically a sorted dict.
 
-:
-
 .. code-block:: python
 
     # keys
@@ -268,8 +266,9 @@ automatically a sorted dict.
     array(["Al Jaza'ir", 'Luanda', 'Gaborone', 'Ouagadougou'], dtype='<U20')
 
 Depending on the usage scenario,
-it may or may not make sense to want a ``dict.items()`` equivalent.
-In which case use ``numpy.rec.fromarrays([table.keys, values[:len(table)]])``,
+it may or may not make sense to want an equivalent to  ``dict.items()``.
+If you do want an equivalent,
+use ``numpy.rec.fromarrays([table.keys, values[:len(table)]])``,
 possibly adding a ``names=`` option:
 
 .. code-block:: python
@@ -279,6 +278,16 @@ possibly adding a ``names=`` option:
     rec.array([('Algeria', "Al Jaza'ir"), ('Angola', 'Luanda'),
                ('Botswana', 'Gaborone'), ('Burkina Faso', 'Ouagadougou')],
               dtype=[('countries', '<U20'), ('capitals', '<U20')])
+
+If the keys and values have the same dtype then ``numpy.c_`` works too.
+
+.. code-block:: python
+
+    >>> np.c_[countries.keys, capitals[:len(countries)]]
+    array([['Algeria', "Al Jaza'ir"],
+           ['Angola', 'Luanda'],
+           ['Botswana', 'Gaborone'],
+           ['Burkina Faso', 'Ouagadougou']], dtype='<U20')
 
 
 .. _as-a-set:
@@ -299,43 +308,45 @@ For these examples we will experiment with integer multiples of 3 and 7.
 
 We'll only require one array to be converted into a hash table.
 The other can remain as an array.
+If both are hash tables, simply use one table's ``keys`` attribute as the array.
 
 .. code-block:: python
 
     from hirola import HashTable
 
-    table = HashTable(len(of_3s) * 1.25, of_3s.dtype)
-    table.add(of_3s)
+    table_of_3s = HashTable(len(of_3s) * 1.25, of_3s.dtype)
+    table_of_3s.add(of_3s)
 
 Use ``table.contains()`` as a vectorised version of ``in``.
 
 .. code-block:: python
 
-    >>> table.contains(of_7s)
+    >>> table_of_3s.contains(of_7s)
     array([ True, False, False,  True, False, False,  True, False, False,
             True, False, False,  True, False, False])
 
-From the above it is easy to derive:
+From the above, the common set operations can be derived with following:
 
-*   Shared values ``set.intersection()``:
+*   ``set.intersection()`` - Values in the array and in the set:
 
 .. code-block:: python
 
-        >>> of_7s[table.contains(of_7s)]
+        >>> of_7s[table_of_3s.contains(of_7s)]
         array([ 0, 21, 42, 63, 84])
 
-*   Values not in the table (set subtraction):
+*   Set subtraction - Values in the array which are not in the set:
 
 .. code-block:: python
 
-        >>> of_7s[~table.contains(of_7s)]
+        >>> of_7s[~table_of_3s.contains(of_7s)]
         array([ 7, 14, 28, 35, 49, 56, 70, 77, 91, 98])
 
-*   Values in either the table or in the tested array ``set.union()``:
+*   ``set.union()`` - Values in either the table or in the tested array (with no
+    duplicates):
 
 .. code-block:: python
 
-        >>> np.concatenate([table.keys, of_7s[~table.contains(of_7s)]], axis=0)
+        >>> np.concatenate([table_of_3s.keys, of_7s[~table_of_3s.contains(of_7s)]], axis=0)
         array([ 0,  3,  6,  9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48,
                51, 54, 57, 60, 63, 66, 69, 72, 75, 78, 81, 84, 87, 90, 93, 96, 99,
                 7, 14, 28, 35, 49, 56, 70, 77, 91, 98])
