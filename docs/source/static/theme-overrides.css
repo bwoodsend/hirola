@@ -58,3 +58,7 @@
 .wy-nav-content-wrap {
   margin-left: min(28%, 300px);
 }
+
+.wy-side-nav-search {
+	background-color: #184159;
+}

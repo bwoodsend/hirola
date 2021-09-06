@@ -3,11 +3,11 @@ Hirola
 =======
 
 .. image::
-    https://img.shields.io/pypi/pyversions/cslug?label=Python
+    https://img.shields.io/pypi/pyversions/cslug?label=Python&color=%23184159
     :alt: PyPI version
     :target: https://pypi.org/project/hirola/
 
-.. image:: https://img.shields.io/badge/coverage-100%25-blue
+.. image:: https://img.shields.io/badge/coverage-100%25-%23184159
 
 NumPy vectorized hash table written in C for fast (roughly 10x faster) ``set``/``dict``
 like operations.
