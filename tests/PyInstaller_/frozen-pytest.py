@@ -7,4 +7,4 @@ import hirola
 
 import pytest
 
-sys.exit(pytest.main(sys.argv[1:] + ["--no-cov"]))
+sys.exit(pytest.main(sys.argv[1:] + ["--no-cov", "--tb=native"]))

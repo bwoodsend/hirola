@@ -1,1 +1,1 @@
-sphinx-autobuild -B -z ../hirola ./source ./build -i *~
+sphinx-autobuild --open-browser --watch ../hirola ./source ./build --ignore "*~"

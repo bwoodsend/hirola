@@ -39,10 +39,10 @@ then that *help* goes in a *hook* file (see
 ### Setup
 
 To test requires a PyInstaller that is recent enough to allow libraries to
-provide their own hooks:
+provide their own hooks and to use the `collect_entry_point()` function:
 
 ``` shell
-pip install "PyInstaller>=4.0"
+pip install "PyInstaller>=4.3"
 ```
 
 ### Build
