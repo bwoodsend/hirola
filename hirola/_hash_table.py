@@ -214,7 +214,7 @@ class HashTable(object):
         * :py:`almost_full = (0.8, "warn")`:
             Issue a `hirola.exceptions.AlmostFull` warning if the table reaches
             80% full.
-        * :py:`almost_full = (0.7, "raise")`:
+        * :py:`almost_full = (0.8, "raise")`:
             Raise a `hirola.exceptions.AlmostFull` exception if the table
             reaches 80% full.
         * :py:`almost_full = (0.7, 2)`:
