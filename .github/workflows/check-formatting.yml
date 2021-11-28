@@ -15,5 +15,5 @@ jobs:
       - run: which clang-format
       - run: pip install -r requirements-dev.txt
       - run: yapf -rip .
-      - run: clang-format hirola/*.c hirola/*.h
+      - run: clang-format -i **/*.c **/*.h
       - run: git diff && git diff --quiet
