@@ -91,6 +91,14 @@ Before you submit a pull request, check that it meets these guidelines:
    Aim to do this with every commit. I don't want to see any *run yapf* commits.
    I have no interest in PEP8 compliance so there is no need to appease flake8.
 
+#. Similarly, C source code should be formatted by clang-format (typically
+   installable with clang or standalone via your system package manager) using::
+
+        clang-format -i **.h **.c
+
+    (Note that this must be ran using a Unix shell such as bash - not the
+    generic Windows command prompt.)
+
 #. I'm fussy about git history. Follow `these guidelines
    <https://chris.beams.io/posts/git-commit/>`_ for writing good commit messages
    but include a ``.`` at the end of the 1st line. Use ``git rebase -i`` to

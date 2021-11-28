@@ -27,7 +27,7 @@ ptrdiff_t HT_hash_for(HashTable * self, void * key, bool its_not_there) {
      choose an unused hash. */
 
   // Get an initial hash for `key`.
-  ptrdiff_t _hash = self -> hash(key, self->key_size);
+  ptrdiff_t _hash = self->hash(key, self->key_size);
   _hash = euclidean_modulo(_hash, self->max);
 
   // Search, starting from our initial hash:
@@ -47,17 +47,17 @@ ptrdiff_t HT_hash_for(HashTable * self, void * key, bool its_not_there) {
     // Be careful here, memcmp() is really meant for sorting and it returns 0
     // if they are equal. 1 or -1 otherwise.
     if (!its_not_there) {
-      if (!memcmp(self->keys + self->key_size * self->hash_owners[_hash],
-                  key, self->key_size)) {
-          // **key** is already in the table. Return this hash which can be
-          // used to locate the **key**.
-          return _hash;
-       }
-     }
+      if (!memcmp(self->keys + self->key_size * self->hash_owners[_hash], key,
+                  self->key_size)) {
+        // **key** is already in the table. Return this hash which can be
+        // used to locate the **key**.
+        return _hash;
+      }
+    }
 
-    #ifdef COUNT_COLLISIONS
+#ifdef COUNT_COLLISIONS
     collisions += 1;
-    #endif
+#endif
 
     // Otherwise keep incrementing `__hash` until we either find a space or a
     // match.
@@ -101,8 +101,8 @@ inline ptrdiff_t HT__claim(HashTable * self, void * key, ptrdiff_t _hash) {
     // And append **key** to `self->keys`.
     // Note that memcpy()'s arguments are in an odd order:
     memcpy(self->keys + self->key_size * index,  // dest,
-           key,  // source,
-           self->key_size);  // number of bytes.
+           key,                                  // source,
+           self->key_size);                      // number of bytes.
 
     self->length += 1;
   }
@@ -125,8 +125,7 @@ inline ptrdiff_t HT_add_new(HashTable * self, void * key) {
 
 ptrdiff_t HT_get(HashTable * self, void * key) {
   ptrdiff_t _hash = HT_hash_for(self, key, false);
-  if (_hash == -1)
-    return -1;
+  if (_hash == -1) return -1;
   return self->hash_owners[_hash];
 }
 
@@ -144,9 +143,9 @@ ptrdiff_t HT_adds(HashTable * self, void * keys, ptrdiff_t * out, ptrdiff_t len,
       return i;
     }
     if (out[i] == self->panic_at - 1)
-       // Nearly out of space. Pass control back to Python so that it can decide
-       // what to do. Using a negative index is a signal to Python that this is
-       // nearly out of space rather than completely out of space.
+      // Nearly out of space. Pass control back to Python so that it can decide
+      // what to do. Using a negative index is a signal to Python that this is
+      // nearly out of space rather than completely out of space.
       return -i - 1;
   }
   return len;
@@ -161,8 +160,8 @@ ptrdiff_t HT_gets(HashTable * self, void * keys, ptrdiff_t * out, size_t len) {
 }
 
 
-ptrdiff_t HT_gets_no_default(HashTable * self, void * keys,
-    ptrdiff_t * out, size_t len) {
+ptrdiff_t HT_gets_no_default(HashTable * self, void * keys, ptrdiff_t * out,
+                             size_t len) {
   /* Like HT_gets() but returns an error code if a key is missing. */
 
   for (size_t i = 0; i < len; i++) {
@@ -178,8 +177,8 @@ ptrdiff_t HT_gets_no_default(HashTable * self, void * keys,
 }
 
 
-void HT_gets_default(HashTable * self, void * keys,
-    ptrdiff_t * out, size_t len, size_t default_) {
+void HT_gets_default(HashTable * self, void * keys, ptrdiff_t * out, size_t len,
+                     size_t default_) {
   /* Like HT_gets() but allows a user defined default for missing keys. */
 
   for (size_t i = 0; i < len; i++) {
