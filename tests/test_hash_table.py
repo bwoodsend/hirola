@@ -5,6 +5,7 @@
 import os
 import sys
 import runpy
+from threading import Thread
 
 import pytest
 import numpy as np
@@ -476,3 +477,55 @@ def test_PyInstaller_hook():
 
     namespace = runpy.run_path(hook)
     assert len(namespace["datas"]) == 2
+
+
+def test_thread_safety_add():
+    """Run table.add() asynchronously and verify that all keys make it in."""
+    # Unfortunately, a lot of data is needed to see the effects asynchronous
+    # manipulations.
+    self = HashTable(200000, int, almost_full=None)
+    chunk_size = self.max // 4
+
+    threads = []
+    chunks = []
+    for i in range(0, self.max, chunk_size):
+        chunk = np.arange(i, i + chunk_size)
+        chunks.append(chunk)
+        threads.append(Thread(target=self.add, args=(chunk,)))
+
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+
+    # All keys should have made it into the table.
+    assert len(self) == self.max
+    # The grouping into chunks and ordering within chunks should have been
+    # preserved but there is no guarantee which order those chunks will occur
+    # in.
+    args = np.argsort(self.keys[::chunk_size])
+    keys = np.concatenate([chunks[i] for i in args]).tolist()
+    assert self.keys.tolist() == keys
+
+
+def test_thread_safety_resize():
+    """Run table.resize() asynchronously. Without proper thread locking in
+    place, this can lead to segfaults."""
+    keys = np.arange(10000)
+    self = HashTable(len(keys) * 1.25, int, almost_full=None)
+    original_max = self.max
+    self.add(keys)
+
+    threads = []
+    for i in range(10):
+        threads.append(
+            Thread(target=self.resize, args=(self.max + i,),
+                   kwargs=dict(in_place=True)))
+
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+
+    assert (self.keys == keys).all()
+    assert original_max <= self.max < original_max + 10

@@ -2,9 +2,11 @@
 """
 """
 
+import functools
 import numbers
 import ctypes
 import math
+from threading import Lock
 
 from numbers import Number
 from typing import Union, Tuple
@@ -18,6 +20,18 @@ slug = CSlug(anchor("hash_table", "hash_table.h", "hash_table.c", "hashes.c"),
              headers=hashes_header)
 
 dtype_types = Union[np.dtype, np.generic, type, str, list, tuple]
+
+
+def lock_threads(method):
+    """Make an non thread safe method lock and unlock the thread on enter and
+    exit respectively."""
+
+    @functools.wraps(method)
+    def wrapped(self, *args, **kwargs):
+        with self._thread_lock:
+            return method(self, *args, **kwargs)
+
+    return wrapped
 
 
 class HashTable(object):
@@ -80,6 +94,7 @@ class HashTable(object):
                                        ptr(self._keys_readonly),
                                        hash=ctypes.cast(hash, ctypes.c_void_p))
         self.almost_full = almost_full
+        self._thread_lock = Lock()
 
     @property
     def max(self) -> int:
@@ -143,6 +158,7 @@ class HashTable(object):
     def _get(self, key):
         return slug.dll.HT_get(self._raw._ptr, ptr(key))
 
+    @lock_threads
     def add(self, keys) -> np.ndarray:
         """Add **keys** to the table.
 
@@ -269,7 +285,7 @@ class HashTable(object):
         assert self.almost_full is not None
 
         if not isinstance(self.almost_full[1], str):
-            self.resize(self.max * self.almost_full[1], in_place=True)
+            self._resize(self.max * self.almost_full[1], in_place=True)
             return
 
         from hirola.exceptions import AlmostFull
@@ -472,6 +488,9 @@ class HashTable(object):
             return self
 
         return new
+
+    _resize = resize
+    resize = lock_threads(_resize)
 
     def copy(self, usable=True) -> 'HashTable':
         """Deep copy this table.
