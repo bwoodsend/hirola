@@ -1,0 +1,19 @@
+---
+name: Lint
+
+on:
+  workflow_dispatch:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - run: sudo apt-get update && sudo apt-get install -y clang-format
+      - run: which clang-format
+      - run: pip install -r requirements-dev.txt
+      - run: yapf -rip .
+      - run: clang-format hirola/*.c hirola/*.h
+      - run: git diff && git diff --quiet
