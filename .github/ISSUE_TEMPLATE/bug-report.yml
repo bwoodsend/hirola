@@ -1,0 +1,62 @@
+name: Bug Report
+description: Report a bug or crash
+
+body:
+
+  - type: input
+    attributes:
+      label: Hirola version
+      description: >
+        Hirola version you saw the issue on. (And please don't go trying other
+        versions randomly to see if they work instead - it's almost guaranteed
+        to be a waste of time.)
+      placeholder: 'Replace with the version reported by: pip show hirola'
+
+  - type: input
+    attributes:
+      label: Python version
+      description: >
+        Python version you saw the issue on. (Similarly, please don't go trying
+        other versions randomly to see if they work.)
+      placeholder: 'Replace with the output of: python -VV'
+
+  - type: input
+    attributes:
+      label: OS
+      description: >
+        Operating system details. For Windows, please copy the *OS Name* and
+        *OS Version* fields given by running `systeminfo` in cmd or PowerShell.
+        On any other OS, copy the output of `uname -a`.
+
+  - type: input
+    attributes:
+      label: C standard library implementation
+      description: >
+        If you're on Linux only, also paste the output of `ldd --version`.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened? How did you get there?
+      description: >
+        Share your code.
+        If it's part of a big project or is not open source then please
+        construct a small, self contained example which gives the same failure.
+        If I can run your example code on either my machine or a virtual one
+        and see the failure first hand then I can probably issue a fix within an
+        hour or so whereas
+        if you leave me to guess or tease the details out of you then this will
+        be a long and miserable experience for both of us
+        :slightly_smiling_face:.
+        If you're new to Github, please also take 30 seconds to checkout
+        [how to format blocks of code so that it's readable](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet#code-and-syntax-highlighting)!!!
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error messages or stacktraces
+      description: >
+        If reporting a crash, please copy and paste the stacktrace (the full
+        error message) here. This will be automatically formatted into code, so
+        no need for backticks.
+      render: python
