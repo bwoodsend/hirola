@@ -1,0 +1,15 @@
+name: Feature Request
+description: Request new functionality to be added to Hirola
+
+body:
+
+  - type: textarea
+    attributes:
+      label: Feature Description
+      description: >
+        Describe your suggestion and why you need it.
+
+  - type: checkboxes
+    attributes:
+      options:
+        - label: I want to implement this myself!
