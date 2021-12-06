@@ -4,7 +4,7 @@
 
 
 // Prototypes.
-ptrdiff_t HT__claim(HashTable * self, void * key, ptrdiff_t _hash);
+ptrdiff_t HT__claim(HashTable * self, void * key, ptrdiff_t hashed);
 
 
 ptrdiff_t euclidean_modulo(ptrdiff_t x, ptrdiff_t base) {
@@ -27,31 +27,32 @@ ptrdiff_t HT_hash_for(HashTable * self, void * key, bool its_not_there) {
      choose an unused hash. */
 
   // Get an initial hash for `key`.
-  ptrdiff_t _hash = self -> hash(key, self->key_size);
-  _hash = euclidean_modulo(_hash, self->max);
+  ptrdiff_t hashed = self -> hash(key, self->key_size);
+  hashed = euclidean_modulo(hashed, self->max);
 
   // Search, starting from our initial hash:
   for (size_t j = 0; j < self->max; j++) {
     // Provided the hash function self->hash() is working well for the input
     // data, this loop should rarely require more than one iteration.
 
-    // If _hash is unclaimed:
-    if (self->hash_owners[_hash] == -1) {
+    // If hashed is unclaimed:
+    if (self->hash_owners[hashed] == -1) {
       // Then **key** is not in this table and, if add()-ing, should be
       // registered under this hash.
-      return _hash;
+      return hashed;
     }
 
-    // This `_hash` has been claimed. Check if the owner of `_hash` is `key`:
-    //      keys[hash_owners[_hash]] == key
+    // This `hashed` value has been claimed. Check if the owner of `hashed` is
+    // this `key`. i.e. Test:
+    //      keys[hash_owners[hashed]] == key
     // Be careful here, memcmp() is really meant for sorting and it returns 0
     // if they are equal. 1 or -1 otherwise.
     if (!its_not_there) {
-      if (!memcmp(self->keys + self->key_size * self->hash_owners[_hash],
+      if (!memcmp(self->keys + self->key_size * self->hash_owners[hashed],
                   key, self->key_size)) {
           // **key** is already in the table. Return this hash which can be
           // used to locate the **key**.
-          return _hash;
+          return hashed;
        }
      }
 
@@ -59,11 +60,11 @@ ptrdiff_t HT_hash_for(HashTable * self, void * key, bool its_not_there) {
     collisions += 1;
     #endif
 
-    // Otherwise keep incrementing `__hash` until we either find a space or a
+    // Otherwise keep incrementing `hashed` until we either find a space or a
     // match.
     // Incrementing with a ridiculously big prime number instead of just adding
     // 1 helps to break up clusters of collisions (albeit inconsistently).
-    _hash = euclidean_modulo(_hash + 118394396737867, self->max);
+    hashed = euclidean_modulo(hashed + 118394396737867, self->max);
   }
 
   return -1;
@@ -76,27 +77,27 @@ ptrdiff_t HT_add(HashTable * self, void * key) {
 
   // Check **key**'s hash in `self->hash_owners` (assuming this key is in the
   // table).
-  ptrdiff_t _hash = HT_hash_for(self, key, false);
+  ptrdiff_t hashed = HT_hash_for(self, key, false);
 
   // Safety check: If it's not there and there's not more space to put it in,
   // escape. This will be raised as an error in Python.
-  if (_hash == -1) return -1;
+  if (hashed == -1) return -1;
 
-  return HT__claim(self, key, _hash);
+  return HT__claim(self, key, hashed);
 }
 
 
-inline ptrdiff_t HT__claim(HashTable * self, void * key, ptrdiff_t _hash) {
-  /* Write **key** to the table under the hash **_hash**. */
+inline ptrdiff_t HT__claim(HashTable * self, void * key, ptrdiff_t hashed) {
+  /* Write **key** to the table under the hash **hashed**. */
 
   // Lookup the owner of the hash. This will be the location **key** if it's in
   // the table or -1 otherwise (no owner).
-  ptrdiff_t index = self->hash_owners[_hash];
+  ptrdiff_t index = self->hash_owners[hashed];
 
   // If **key** isn't there ...
   if (index == -1) {
-    // ... claim the _hash. Record we're we about to put **key**.
-    self->hash_owners[_hash] = index = self->length;
+    // ... claim the hash. Record where we're we about to put **key**.
+    self->hash_owners[hashed] = index = self->length;
 
     // And append **key** to `self->keys`.
     // Note that memcpy()'s arguments are in an odd order:
@@ -118,16 +119,16 @@ inline ptrdiff_t HT_add_new(HashTable * self, void * key) {
 
   // This is identical to HT_add() but with the **its_not_there** argument to
   // HT_hash_for() set to true.
-  ptrdiff_t _hash = HT_hash_for(self, key, true);
-  return HT__claim(self, key, _hash);
+  ptrdiff_t hashed = HT_hash_for(self, key, true);
+  return HT__claim(self, key, hashed);
 }
 
 
 ptrdiff_t HT_get(HashTable * self, void * key) {
-  ptrdiff_t _hash = HT_hash_for(self, key, false);
-  if (_hash == -1)
+  ptrdiff_t hashed = HT_hash_for(self, key, false);
+  if (hashed == -1)
     return -1;
-  return self->hash_owners[_hash];
+  return self->hash_owners[hashed];
 }
 
 
