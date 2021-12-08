@@ -18,6 +18,4 @@
     :caption: About
 
     changelog
-
-
-
+    contributing
