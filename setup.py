@@ -35,8 +35,8 @@ setup(
     },
     extras_require={
         "test": [
-            'pytest>=3', 'pytest-order', 'coverage', 'pytest-cov',
-            'coverage-conditional-plugin', 'pytest-timeout'
+            "pytest>=3", "pytest-order", "coverage", "pytest-cov",
+            "pytest-timeout"
         ]
     },
     license="MIT license",
