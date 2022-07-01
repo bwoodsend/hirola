@@ -19,18 +19,20 @@ Guide to Submitting Changes
 ---------------------------
 
 Before you start making changes, please open either a bug report or a feature
-request so that I can tell you if what you are about to do is likely to be
-accepted.
+request.
+That way, I can tell you if what you are about to do is likely to be accepted
+before you invest your time in it.
 
-It is assumed that you have at least a basic knowledge of git and working
+This guide assumes that you have at least a basic knowledge of git, working
 with command line tools and that you have a GitHub account.
-If that is not the case then attempting these changes yourself is not a good
-idea.
+If that is not the case then attempting these changes yourself is generally not
+a good idea.
 Please do not try to make changes, no matter how trivial, via GitHub's web UI -
-it invariably ends in carnage...
+it looks tantilisingly simple but invariably ends in carnage...
 
-If you get stuck anywhere on the following then please either push your current
-changes, submit a pull request but mark it as a draft or just `ask for help`_!
+If you get stuck anywhere throughout the following then please either push your
+current changes, submit a pull request but mark it as a draft or just `ask for
+help`_!
 As a rough rule of thumb, if you've gotten nowhere in the last 15 minutes, it's
 time to ask for help.
 
@@ -145,6 +147,9 @@ Unless specified otherwise, these should all be ran from the repository's root.
 Compile or recompile the C code
 +++++++++++++++++++++++++++++++
 
+Whenever you modify C code, you'll have to trigger a recompile for the changes
+to take effect.
+
 * From terminal (requires restarting any open Python consoles):
   ``python setup.py -q build``
 * From Python (no need to restart anything):
@@ -162,7 +167,7 @@ Compile or recompile the C code
 Test
 ++++
 
-To run the test suite:
+To run the test suite, use pytest_:
 
 * Run everything: ``pytest``
 * Run everything including the tests normally skipped: Recompile with
@@ -175,18 +180,25 @@ To run the test suite:
   ``pytest tests/test_hash_table.py::test_automatic_resize``
 
 New tests can be added by defining functions whose names starts with ``test_``
-in python files whose name also starts with ``test_``.
+in python files whose name also starts with ``test_`` inside the ``tests``
+folder.
 Tests should be ordered so that low level tests happen before high level tests
 so that the first test to fail (as given by ``pytest -x``) indicates exactly
 where the break is rather than indicating that a more complex function is
 broken as a side effect of the lower level function's being broken.
+The per-file running order is determined by ``pytestmark = pytest.mark.order()``
+calls at the top of each file and within each file, tests are ordered simply by
+their line numbers.
 
 
 Run coverage
 ++++++++++++
 
-This is only useful if done immediately after running the full test suite.
+Coverage tells us which lines of code were never ran when running the test
+suite.
+The test suite automatically collects coverage statistics.
 
+* Do a full run of the test suite: ``pytest``
 * Generate an HTML report: ``coverage html``
 * View said report:
     * Linux: ``xdg-open htmlcov/index.html``
@@ -220,7 +232,7 @@ Trigger continuous integration
 
 Continuous integration allows us to quickly test all platforms and Python
 versions.
-First add, commit and push your changes then either:
+First push your changes to GitHub then either:
 
 * Trigger from the web UI:
 
@@ -288,7 +300,7 @@ to moan about if your changes don't meet the criteria below.
    prefixed name or be defined in an underscore prefixed submodule to serve as
    a signal both to users and IDE code completions not to use them.
    Hidden, undocumented or barely documented functionality leads to nightmares
-   of confusion, guess work, brittleness and breaking changes where users
+   where users
    don't know what they can safely use without fear of their code breaking after
    upgrading hirola and hirola developers can't change anything for fear of
    breaking someone else's downstream project.
@@ -314,3 +326,4 @@ will add it to the credits section of the README.
 .. _`GitHub's CLI`: https://github.com/cli/cli#github-cli
 .. _`Google style docstrings`: https://www.sphinx-doc.org/en/master/usage/extensions/example_google.html#example-google
 .. _`README.rst`: https://github.com/bwoodsend/Hirola#readme
+.. _pytest: https://docs.pytest.org/en/6.2.x/
