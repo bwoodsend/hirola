@@ -70,6 +70,7 @@ its test dependencies.
 5. Compile the C code. (Similarly replace ``python`` with ``python3`` if that's
    what you normally do.) ::
 
+    pip install toml
     python setup.py -q build
 
    If you don't have gcc installed then this will issue a

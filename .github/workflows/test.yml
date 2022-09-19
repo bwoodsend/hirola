@@ -51,7 +51,7 @@ jobs:
 
       - name: Install
         run: |
-          pip install --cache-dir=pip-cache wheel
+          pip install --cache-dir=pip-cache wheel toml
           pip install --cache-dir=pip-cache -e .[test]
 
       - name: Build
