@@ -9,18 +9,15 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: [3.9, 3.6, 3.7, 3.8, '3.10']
+        python-version: [3.9, 3.8, '3.10', 3.11-dev]
         architecture: ['x64']
         include:
-          - os: macos-10.15
-            python-version: 3.9
-            architecture: 'x64'
-          - os: macos-11.0
-            python-version: 3.9
+          - os: macos-latest
+            python-version: 3.11-dev
             architecture: 'x64'
           - name: Windows
             os: windows-latest
-            python-version: 3.9
+            python-version: 3.11-dev
             architecture: 'x64'
 
       fail-fast: false
