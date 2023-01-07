@@ -2,6 +2,13 @@
 """
 """
 
+import sys
+import json
+import os
+
+print(sys.argv, file=sys.stderr)
+print(json.dumps(dict(os.environ), indent="  "), file=sys.stderr)
+
 from setuptools import setup, find_packages
 import runpy
 from pathlib import Path
