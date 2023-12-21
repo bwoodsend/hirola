@@ -22,15 +22,16 @@ Welcome to hirola!
 ∘
 `Support <https://github.com/bwoodsend/hirola/discussions>`_
 
-NumPy vectorized hash table written in C for fast (roughly 10x faster)
-``set``/``dict`` like operations.
-A ``hirola.HashTable`` is to ``dict`` what ``numpy.array`` is to ``list``.
-By imposing some constraints, vectorising, and translating into C, the speed
-can be improved dramatically.
-Hirola serves as an extension of
-`numpy.unique() <https://numpy.org/doc/stable/reference/generated/numpy.unique.html>`_
-and a very light (20-30KB download size) and much faster alternative to
-`pandas.Categorical() <https://pandas.pydata.org/docs/reference/api/pandas.Categorical.categories.html>`_.
+NumPy vectorized hash table written in C for fast (see `benchmarks
+<https://hirola.readthedocs.io/en/latest/benchmarks.html>`_) ``set``/``dict``
+like operations. A ``hirola.HashTable`` is to ``dict`` what ``numpy.array`` is
+to ``list``. By imposing some constraints, vectorising, and translating into C,
+the speed can be improved dramatically.
+Hirola serves as an extension of `numpy.unique()
+<https://numpy.org/doc/stable/reference/generated/numpy.unique.html>`_ and a
+very light (20-30KB download size) and much faster alternative to
+`pandas.Categorical()
+<https://pandas.pydata.org/docs/reference/api/pandas.Categorical.categories.html>`_.
 
 The constraints that Hirola imposes over normal ``set()`` and ``dict()`` are
 similar to NumPy's constraints against ``list()``. These constraints are:

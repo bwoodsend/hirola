@@ -1,0 +1,7 @@
+sloth-speedtest
+peccary @ git+ssh://git@github.com/bwoodsend/peccary.git
+tabulate
+humanize
+numpy-indexed
+pandas
+colorama

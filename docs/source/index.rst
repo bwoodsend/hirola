@@ -7,6 +7,7 @@
     :caption: Usage
 
     quickstart
+    benchmarks
 
 .. toctree::
     :caption: API Reference
