@@ -9,18 +9,17 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: [3.9, 3.6, 3.7, 3.8, '3.10']
+        python-version: [3.8, '3.10', 3.12]
         architecture: ['x64']
         include:
-          - os: macos-10.15
-            python-version: 3.9
+          - os: ubuntu-20.04
+            python-version: 3.6
             architecture: 'x64'
-          - os: macos-11.0
-            python-version: 3.9
+          - os: macos-latest
+            python-version: 3.12
             architecture: 'x64'
-          - name: Windows
-            os: windows-latest
-            python-version: 3.9
+          - os: windows-latest
+            python-version: 3.12
             architecture: 'x64'
 
       fail-fast: false
@@ -31,8 +30,6 @@ jobs:
     steps:
 
       - uses: actions/checkout@v3
-      - run: |
-          git fetch --prune --unshallow
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v3
@@ -40,19 +37,10 @@ jobs:
           python-version: ${{ matrix.python-version }}
           architecture: ${{ matrix.architecture }}
 
-      - name: Cache pip cached wheels
-        uses: actions/cache@v3
-        env:
-          cache-name: ${{ matrix.os }}
-        with:
-          path: pip-cache
-          key: ${{ matrix.os }}
-          restore-keys: ${{ matrix.os }}
-
       - name: Install
         run: |
-          pip install --cache-dir=pip-cache wheel
-          pip install --cache-dir=pip-cache -e .[test]
+          pip install wheel toml setuptools
+          pip install -e .[test]
 
       - name: Build
         run: python setup.py build
@@ -61,8 +49,11 @@ jobs:
 
       - name: Test
         run: pytest
+        env:
+          FORCE_COLOR: 1
 
       # Test PyInstaller.
+      - run: pip uninstall -y hirola && pip install .
       - run: pip install pyinstaller
       - working-directory: tests/PyInstaller_
         run: pyinstaller frozen-pytest.spec
