@@ -22,7 +22,7 @@ FROM quay.io/pypa/${BASE}
 # Choosing a Python version is done just by prepending its bin dir to PATH.
 ENV PATH=/opt/python/cp39-cp39/bin:$PATH
 # Install dependencies. Do this before COPY to encourage caching.
-RUN pip install --prefer-binary wheel auditwheel sloth-speedtest numpy
+RUN pip install --prefer-binary wheel auditwheel sloth-speedtest numpy toml
 # Copy across this repo.
 COPY . /io
 # Set the repo's root as the cwd.
