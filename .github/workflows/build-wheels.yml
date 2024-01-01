@@ -17,9 +17,9 @@ jobs:
             architecture: x86
     steps:
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v1
+      - uses: actions/setup-python@v5
         with:
           python-version: 3.9
           architecture: ${{ matrix.architecture }}
@@ -60,9 +60,9 @@ jobs:
           rm $OLD_WHEEL
 
       - name: Upload wheel(s) as build artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
-          name: wheels
+          name: wheels-${{ matrix.os }}-${{ matrix.architecture }}
           path: dist/*.whl
 
       - name: Test Wheel
@@ -86,8 +86,9 @@ jobs:
         ]
     steps:
 
-      - uses: actions/checkout@v2
-      - uses: crazy-max/ghaction-docker-buildx@v3.3.0
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y qemu-user-static
+      - run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes --credential yes
 
       - name: Build docker image
         run: |
@@ -102,9 +103,9 @@ jobs:
           "
 
       - name: Upload wheel(s) as build artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
-          name: wheels
+          name: wheels-${{ matrix.base }}
           path: dist/*.whl
 
       - name: Install and test wheel
