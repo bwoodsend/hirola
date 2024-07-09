@@ -379,14 +379,18 @@ class HashTable(object):
         """Get a key and its location from a ravelled index. Used to prettify
         key errors."""
         assert index >= 0
+
+        def _repr(key):
+            return str(key) if key.ndim == 0 else repr(key)
+
         if len(shape) == 0:
             if self._dtype_shape:
-                return "key", repr(keys)
+                return "key", _repr(keys)
             return "key", repr(keys.item())
         if len(shape) == 1:
-            return f"keys[{index}]", repr(keys[index])
+            return f"keys[{index}]", _repr(keys[index])
         index = np.unravel_index(index, shape)
-        return ("keys[" + ', '.join(map(str, index)) + "]"), repr(keys[index])
+        return ("keys[" + ', '.join(map(str, index)) + "]"), _repr(keys[index])
 
     def __getitem__(self, key):
         return self.get(key, default=self._NO_DEFAULT)
