@@ -22,27 +22,23 @@ Welcome to hirola!
 ∘
 `Support <https://github.com/bwoodsend/hirola/discussions>`_
 
-NumPy vectorized hash table written in C for fast (see `benchmarks
-<https://hirola.readthedocs.io/en/latest/benchmarks.html>`_) ``set``/``dict``
-like operations. A ``hirola.HashTable`` is to ``dict`` what ``numpy.array`` is
-to ``list``. By imposing some constraints, vectorising, and translating into C,
-the speed can be improved dramatically.
-Hirola serves as an extension of `numpy.unique()
+A vectorized hash table written in C for `fast
+<https://hirola.readthedocs.io/en/latest/benchmarks.html>`_ ``set``/``dict``
+like operations on NumPy arrays.
+
+Hirola provides fast indexing and de-duplication of keys.
+It can be used as an extension of `numpy.unique()
 <https://numpy.org/doc/stable/reference/generated/numpy.unique.html>`_ and a
 very light (20-30KB download size) and much faster alternative to
 `pandas.Categorical()
 <https://pandas.pydata.org/docs/reference/api/pandas.Categorical.categories.html>`_.
-
-The constraints that Hirola imposes over normal ``set()`` and ``dict()`` are
-similar to NumPy's constraints against ``list()``. These constraints are:
+Hirola obtains its speed in the same way that NumPy does – vectorising,
+translating into C and imposing the following constraints:
 
 * Keys must all be of the same predetermined type and size.
 * The maximum size of a table must be chosen in advance and managed explicitly.
 * To get any performance boost, operations should be done in bulk.
 * Elements can not be removed.
-
-If any of the above are not satisfied for your use case then don't use
-hirola.
 
 
 Installation
@@ -61,7 +57,6 @@ Quickstart
 ``HashTable``
 *************
 
-At the rawest and dirtiest level lives the ``HashTable`` class.
 A ``HashTable`` can be though of as a ``dict`` but with only an enumeration for
 values.
 To construct an empty hash table:
@@ -69,9 +64,9 @@ To construct an empty hash table:
 .. code-block:: python
 
     import numpy as np
-    from hirola import HashTable
+    import hirola
 
-    table = HashTable(
+    table = hirola.HashTable(
         20,  # <--- Maximum size for the table - up to 20 keys.
         "U10",  # <--- NumPy dtype - strings of up to 10 characters.
     )
@@ -127,7 +122,7 @@ inputs rather than one at a time.
 Like the Python dict,
 using ``table[key]`` raises a ``KeyError`` if keys are missing
 but using ``table.get(key)`` returns a configurable default.
-Unlike Python's dict, the default is ``-1``.
+Unlike Python's dict, the default default is ``-1``.
 
 .. code-block:: python
 
@@ -145,8 +140,7 @@ Choosing a ``max`` size
 .......................
 
 Unlike Python's ``set`` and ``dict``, ``Hirola`` does not manage its size
-automatically by default
-(although `it can be reconfigured to <automatic-resize>`_).
+automatically (although `it can be reconfigured to <automatic-resize>`_).
 To prevent wasted resizing (which is what Python does under the hood),
 you have full control of and responsibility for how much space the table uses.
 Obviously the table has to be large enough to fit all the keys in it.
@@ -165,14 +159,14 @@ use NumPy's structured dtypes.
 In the following example, the data type ``(points.dtype, 3)``
 indicates that a 3D point - a triplet of floats -
 should be considered as one object.
-See ``help(HashTable.dtype)`` for more information of specifying dtypes.
+See ``help(hirola.HashTable.dtype)`` for more information of specifying dtypes.
 Only the last axis or last axes may be thought of as single keys.
 For other setups, first convert with ``numpy.transpose()``.
 
 .. code-block:: python
 
     import numpy as np
-    from hirola import HashTable
+    import hirola
 
     # Create a cloud of 3D points with duplicates. This is 3000 points in total,
     # with up to 1000 unique points.
@@ -182,7 +176,7 @@ For other setups, first convert with ``numpy.transpose()``.
     # In practice, you generally don't know how many unique elements there are
     # so we'll pretend we don't either an assume the worst case of all 3000 are
     # unique. We'll also give 25% padding for speed.
-    table = HashTable(len(points) * 1.25, (points.dtype, 3))
+    table = hirola.HashTable(len(points) * 1.25, (points.dtype, 3))
 
     # Add all points to the table.
     ids = table.add(points)
@@ -203,7 +197,7 @@ Duplicate-free contents can be accessed from ``table.keys``:
     (954, 3)
 
 Each point's location in ``table.keys`` is returned by ``table.add()``,
-similarly to ``numpy.unique(..., return_args=True)``.
+like ``numpy.unique(..., return_args=True)``.
 
 .. code-block:: python
 
@@ -223,26 +217,28 @@ Handling of nearly full hash tables
 ``HashTable``\ s become very slow when almost full.
 As of v0.3.0, an efficiency warning will notify you if a table exceeds 90% full.
 This warning can be reconfigured into an error, silenced or set to resize the
-table automatically to make room.
+table automatically to make more room.
 These are demonstrated in the example constructors below:
 
 .. code-block:: python
 
     # The default: Issue a warning when the table is 90% full.
-    HashTable(..., almost_full=(0.9, "warn"))
+    hirola.HashTable(..., almost_full=(0.9, "warn"))
 
     # Disable all "almost full" behaviours.
-    HashTable(..., almost_full=None)
+    hirola.HashTable(..., almost_full=None)
 
     # To consider a table exceeding 80% full as an error use:
-    HashTable(..., almost_full=(0.8, "raise"))
+    hirola.HashTable(..., almost_full=(0.8, "raise"))
 
     # To automatically triple in size whenever the table exceeds 80% full use:
-    HashTable(..., almost_full=(0.8, 3.0))
+    hirola.HashTable(..., almost_full=(0.8, 3.0))
 
-Resizing tables is slow which is why it's not enabled by default.
-It should be avoided unless you really have no idea how big your table will need
-to be.
+Resizing tables is slow (it's only marginally optimized beyond creating a new
+bigger table and ``.add()``\ -ing the existing keys) which is why it's not
+enabled by default. It should be avoided unless you really have no idea how big
+your table will need to be and favour the memory savings of not overestimating
+over raw speed.
 
 
 Recipes
@@ -250,7 +246,8 @@ Recipes
 
 A ``HashTable`` can be used to replicate a `dict <as-a-dict>`_,
 `set <as-a-set>`_ or a `collections.Counter <as-a-collections.Counter>`_.
-These might turn into their own proper classes in the future or they might not.
+These examples below might turn into their own proper classes in the future but
+so far I've never come across a real use case where they would actually fit.
 
 
 .. _as-a-dict:
@@ -258,17 +255,18 @@ These might turn into their own proper classes in the future or they might not.
 Using a ``HashTable`` as a ``dict``
 ...................................
 
-A ``dict`` requires a second array for values.
+A ``dict`` can be imitated using a ``HashTable()`` with a second array for
+values.
 The output of ``HashTable.add()``  and ``HashTable.get()`` should be used as
 indices of ``values``:
 
 .. code-block:: python
 
     import numpy as np
-    from hirola import HashTable
+    import hirola
 
-    # The `keys` - will be populated with names of African countries.
-    countries = HashTable(40, (str, 20))
+    # The `keys` - will be populated with names of countries.
+    countries = hirola.HashTable(40, (str, 20))
     # The `values` - will be populated with the names of each country's capital city.
     capitals = np.empty(countries.max, (str, 20))
 
@@ -286,7 +284,8 @@ Or in bulk:
     new_values = ["Luanda", "Gaborone", "Ouagadougou"]
     capitals[countries.add(new_keys)] = new_values
 
-Like Python dicts, overwriting values is exactly the same as writing them.
+Like Python dicts, the syntax to overwrite values is exactly the same as to
+write them.
 
 Retrieve values with ``values[table[key]]``:
 
@@ -357,9 +356,9 @@ If both are hash tables, simply use one table's ``keys`` attribute as the array.
 
 .. code-block:: python
 
-    from hirola import HashTable
+    import hirola
 
-    table_of_3s = HashTable(len(of_3s) * 1.25, of_3s.dtype)
+    table_of_3s = hirola.HashTable(len(of_3s) * 1.25, of_3s.dtype)
     table_of_3s.add(of_3s)
 
 Use ``table.contains()`` as a vectorised version of ``in``.
@@ -370,7 +369,7 @@ Use ``table.contains()`` as a vectorised version of ``in``.
     array([ True, False, False,  True, False, False,  True, False, False,
             True, False, False,  True, False, False])
 
-From the above, the common set operations can be derived with following:
+From the above, the common set operations can be derived:
 
 *   ``set.intersection()`` - Values in the array and in the set:
 
@@ -421,9 +420,9 @@ table with a separate array for values.
 
 .. code-block:: python
 
-    from hirola import HashTable
+    import hirola
 
-    word_table = HashTable(len(words), words.dtype)
+    word_table = hirola.HashTable(len(words), words.dtype)
     counts = np.zeros(word_table.max, dtype=int)
 
 The only new functionality that is not defined in `using a hash table as a dict
@@ -459,7 +458,6 @@ Use NumPy's indirect sorting functions to get most or least common keys.
           dtype='|S14')
 
 
-
 A Security Note
 ---------------
 
@@ -478,13 +476,3 @@ which performs dictionary lookup based on user input
 and your user-base doesn't like you much
 or you have some very spiteful below-the-belt competitors
 then I recommend that you don't use this library.
-
-
-Credits
--------
-
-This package was initially created with Cookiecutter_ and a fork of the
-`audreyr/cookiecutter-pypackage`_ project template.
-
-.. _Cookiecutter: https://github.com/audreyr/cookiecutter
-.. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage

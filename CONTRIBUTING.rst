@@ -28,13 +28,14 @@ with command line tools and that you have a GitHub account.
 If that is not the case then attempting these changes yourself is generally not
 a good idea.
 Please do not try to make changes, no matter how trivial, via GitHub's web UI -
-it looks tantilisingly simple but invariably ends in carnage...
+it looks tantalisingly simple but it's really a honey pot.
+Since you can't run the formatter or the tests or even be sure that the C code
+will compile, you'll invariably end up using more maintainer time than if you'd
+not tried to help at all (and not learn anything in the process either).
 
 If you get stuck anywhere throughout the following then please either push your
 current changes, submit a pull request but mark it as a draft or just `ask for
 help`_!
-As a rough rule of thumb, if you've gotten nowhere in the last 15 minutes, it's
-time to ask for help.
 
 
 Setting up
@@ -53,8 +54,8 @@ its test dependencies.
 
 3. Clone and open a terminal inside your local clone. ::
 
-    git clone https://github.com/your-username/Hirola.git
-    cd Hirola
+    git clone https://github.com/your-username/hirola.git
+    cd hirola
 
 4. Install locally by running::
 
@@ -63,7 +64,7 @@ its test dependencies.
    Note, if you normally use ``pip3`` instead of ``pip`` then do so here.
    The above command tells pip to install your local clone (the ``.``)
    in editable mode (the ``-e`` flag)
-   and additionally install Hirola's test requirements (the ``[test]``).
+   and additionally install hirola's test requirements (the ``[test]``).
    The first time you run this may take a while if your internet connection is
    poor.
 
@@ -83,20 +84,20 @@ its test dependencies.
    All non-skipped tests should pass and you should get a nice green message
    saying *Required test coverage of 100% reached*.
    If that is not the case then
-   `please report it <https://github.com/bwoodsend/Hirola/issues/new>`_.
+   `please report it <https://github.com/bwoodsend/hirola/issues/new>`_.
 
 7. Create and switch to a new branch to make your changes in. ::
 
     git switch -c add-foo-feature
 
-You now have a basic functional development environment. Go ahead and hack away!
+You now have a functional development environment. Go ahead and make your changes!
 
 
 Codebase Roadmap
 ................
 
 The code base is hopefully small enough that you don't need a map but here's
-a brief one irregardless.
+a brief one regardless.
 
 * The ``hirola`` folder is what you ultimately get when you
   ``pip install hirola``.
@@ -141,7 +142,6 @@ Commands Cheatsheet
 
 A list of terminal commands you are likely to need for day to day development.
 Unless specified otherwise, these should all be ran from the repository's root.
-
 
 
 Compile or recompile the C code
@@ -271,7 +271,6 @@ Clang produces binaries which are about 20% faster so unless you also compile
 with clang, it is not meaningful to compare to a hirola downloaded from PyPI.
 
 
-
 Before Submission
 .................
 
@@ -279,10 +278,10 @@ Before you submit a pull request, here is a checklist of things that I am likely
 to moan about if your changes don't meet the criteria below.
 
 #. Make sure that there are no nonfunctional or stylistic changes to existing
-   code. I don't give a wet-slap about PEP8 -
-   I care very much about the signal to noise ratio of
-   ``git log -S "new code"``, ``git log -- filename.py`` and ``git diff`` as
-   well as the ability to merge, cherry-pick and rebase without merge conflicts.
+   code. I don't care about PEP8 compliance.
+   I do care about the signal to noise ratio of ``git log -S "new code"``, ``git
+   log -- filename.py`` and ``git diff`` as well as the ability to merge,
+   cherry-pick and rebase without merge conflicts.
 
 #. The test suite passes with 100% coverage (see `Test`_ and `Run coverage`_).
    If your adding code then this means that you will also have to add tests
@@ -299,11 +298,10 @@ to moan about if your changes don't meet the criteria below.
    Any functions that aren't intended for use should have an underscore
    prefixed name or be defined in an underscore prefixed submodule to serve as
    a signal both to users and IDE code completions not to use them.
-   Hidden, undocumented or barely documented functionality leads to nightmares
-   where users
-   don't know what they can safely use without fear of their code breaking after
-   upgrading hirola and hirola developers can't change anything for fear of
-   breaking someone else's downstream project.
+   Without a clear distinction between public and private API, users know what
+   they can safely use without fear of their code breaking after upgrading
+   hirola and hirola developers can't change anything for fear of breaking
+   someone else's downstream project.
 
 #. Python source code should be formatted by yapf (see
    `Run automatic code formatter`_).
@@ -318,12 +316,11 @@ If you wish, append *By your name / username / email / URL / some other
 piece of information you wish to be identified by* to a commit message and I
 will add it to the credits section of the README.
 
-
-.. _`Report bugs`: https://github.com/bwoodsend/Hirola/issues/new?&template=bug-report.yml
-.. _`Request features`: https://github.com/bwoodsend/Hirola/issues/new?&template=feature-request.yml
-.. _`Ask for help`: https://github.com/bwoodsend/Hirola/discussions
-.. _Fork: https://github.com/bwoodsend/Hirola/fork
+.. _`Report bugs`: https://github.com/bwoodsend/hirola/issues/new?&template=bug-report.yml
+.. _`Request features`: https://github.com/bwoodsend/hirola/issues/new?&template=feature-request.yml
+.. _`Ask for help`: https://github.com/bwoodsend/hirola/discussions
+.. _Fork: https://github.com/bwoodsend/hirola/fork
 .. _`GitHub's CLI`: https://github.com/cli/cli#github-cli
 .. _`Google style docstrings`: https://www.sphinx-doc.org/en/master/usage/extensions/example_google.html#example-google
-.. _`README.rst`: https://github.com/bwoodsend/Hirola#readme
+.. _`README.rst`: https://github.com/bwoodsend/hirola#readme
 .. _pytest: https://docs.pytest.org/en/6.2.x/

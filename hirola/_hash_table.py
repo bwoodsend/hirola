@@ -65,7 +65,8 @@ class HashTable(object):
                 attribute.
 
         The **max** parameter is silently normalised to `int` and clipped
-        to a minimum of 1 if it is less than 1.
+        to a minimum of 1 if it is less than 1. Zero length tables are not
+        allowed.
 
         """
         self._dtype = np.dtype(dtype)
@@ -102,8 +103,7 @@ class HashTable(object):
 
         Adding keys to exceed this maximum will trigger a
         :class:`~hirola.exceptions.HashTableFullError`. Nearly full tables
-        will `add` and `get` much slower. For best performance,
-        choose a maximum size which is 25-50% larger than you expect it to get.
+        will `add` and `get` much slower.
 
         """
         return self._raw.max
@@ -189,7 +189,7 @@ class HashTable(object):
 
         # This while loop will only iterate a second time if the "almost full"
         # threshold is enabled and crossed. It will only iterate more than twice
-        # if `self.almost_full` is set to automatically upsize the table.
+        # if `self.almost_full` is set to automatically up-size the table.
         index = -1
         while True:
             index = slug.dll.HT_adds(self._raw._ptr, ptr(keys), ptr(out),
@@ -330,7 +330,7 @@ class HashTable(object):
             keys:
                 Elements to search for.
             default:
-                Returned inplace of a missing key.
+                Returned in place of a missing key.
                 May be any object.
         Returns:
             The index/indices of **keys** in this table's `keys`. If a
@@ -428,19 +428,20 @@ class HashTable(object):
         return keys, keys.shape
 
     def destroy(self) -> np.ndarray:
-        """Release a writeable version of `keys` and permanently disable
+        """Release a writable version of `keys` and permanently disable
         this table.
 
         Returns:
-            A writeable shallow copy of `keys`.
+            A writable shallow copy of `keys`.
 
-        Modifying `keys` would cause an internal meltdown and is
-        therefore blocked by setting the writeable flag to false. However, if
-        you no longer need this table then it is safe to do as you please with
-        the `keys` array. This function grants you full access to
-        `keys` but blocks you from adding to or getting from this table
-        in the future. If you want both a writeable `keys` array and
-        functional use of this table then use :py:`table.keys.copy()`.
+        Modifying `keys` would corrupt the hash table's internal storage and is
+        therefore blocked (analogous to `dict`'s blocking of `list` keys) by
+        setting ``keys.flags.writeable = False``. However, if you no longer
+        need this table then it is safe to do as you please with the `keys`
+        array. Calling this function releases a writable view of `keys` but
+        blocks you from adding to or getting from this table in the future. If
+        you want both a writable `keys` array and functional use of this table
+        then use :py:`table.keys.copy()`.
 
         """
         # Destruction is just setting a flag.
@@ -467,6 +468,8 @@ class HashTable(object):
         Raises:
             ValueError:
                 If requested size is too small (:py:`new_size < len(table)`).
+
+        Note that there is no performance benefit to resizing in place.
 
         .. versionchanged:: 0.3.0
             Add the **in_place** option.
