@@ -2,13 +2,6 @@
 Welcome to hirola!
 ==================
 
-.. image::
-    https://img.shields.io/pypi/pyversions/cslug?label=Python&color=%23184159
-    :alt: PyPI version
-    :target: https://pypi.org/project/hirola/
-
-.. image:: https://img.shields.io/badge/coverage-100%25-%23184159
-
 ∘
 `MIT license <https://github.com/bwoodsend/hirola/blob/master/LICENSE>`_
 ∘
