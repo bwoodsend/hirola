@@ -53,7 +53,7 @@ templates_path = ['_templates']
 # You can specify multiple suffix as a list of string:
 #
 # source_suffix = ['.rst', '.md']
-source_suffix = '.rst'
+source_suffix = {'.rst': 'restructuredtext'}
 
 # The master toctree document.
 master_doc = 'index'
@@ -96,7 +96,7 @@ with open("rst_prolog.txt") as f:
 # Add intersphinx mappings for :class:`xxx` cross references to non-hirola
 # docs.
 intersphinx_mapping = {
-    'python': ('http://docs.python.org/3', None),
+    'python': ('https://docs.python.org/3', None),
     'numpy': ('https://numpy.org/doc/stable/', None),
 }
 
