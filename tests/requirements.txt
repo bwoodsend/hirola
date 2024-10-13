@@ -1,0 +1,5 @@
+pytest
+pytest-order
+coverage
+pytest-cov
+coverage-conditional-plugin

@@ -27,12 +27,6 @@ setup(
     entry_points={
         "pyinstaller40": "hook-dirs=hirola:_PyInstaller_hook_dir",
     },
-    extras_require={
-        "test": [
-            "pytest>=3", "pytest-order", "coverage", "pytest-cov",
-            "coverage-conditional-plugin"
-        ]
-    },
     license="MIT license",
     long_description=readme,
     long_description_content_type='text/x-rst',

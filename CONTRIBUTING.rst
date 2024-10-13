@@ -59,12 +59,12 @@ its test dependencies.
 
 4. Install locally by running::
 
-    pip install -e .[test]
+    pip install -e . -r tests/requirements.txt
 
    Note, if you normally use ``pip3`` instead of ``pip`` then do so here.
    The above command tells pip to install your local clone (the ``.``)
    in editable mode (the ``-e`` flag)
-   and additionally install hirola's test requirements (the ``[test]``).
+   and additionally install hirola's test requirements.
    The first time you run this may take a while if your internet connection is
    poor.
 

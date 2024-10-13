@@ -28,4 +28,4 @@ COPY . /io
 # Set the repo's root as the cwd.
 WORKDIR /io
 # Install it.
-RUN pip install --prefer-binary -e .[test]
+RUN pip install --prefer-binary -e . -r tests/requirements.txt

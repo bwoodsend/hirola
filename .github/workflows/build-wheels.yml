@@ -67,8 +67,8 @@ jobs:
 
       - name: Test Wheel
         run: |
-          pip install "$(echo dist/*.whl)[test]" &&
-          rm -rf hirola &&
+          pip install dist/*.whl -r tests/requirements.txt
+          rm -rf hirola
           pytest --no-cov
         shell: bash
 
