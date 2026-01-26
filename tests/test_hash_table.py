@@ -48,6 +48,7 @@ def test_walk_through():
     assert self.key_size == 4
     assert self.length == 0
     assert self.max == 5
+    assert repr(self) == "hirola.HashTable<length=0 of 5, dtype=float32>"
 
     hash = slug.dll.hash(ptr(data), self.key_size)
     for i in range(2):
@@ -67,6 +68,7 @@ def test_walk_through():
     assert self._add(data[5]) == 4
     assert self._add(data[6]) == 2
     assert self._add(data[7]) == -1
+    assert repr(self) == "hirola.HashTable<length=5 of 5, dtype=float32>"
 
     assert self.add(data[:7]).tolist() == [0, 1, 0, 2, 3, 4, 2]
     assert self.get(data).tolist() == [0, 1, 0, 2, 3, 4, 2, -1]
@@ -409,11 +411,12 @@ def test_infinite_resizing_check():
 def test_automatic_resize():
     """Test setting self.almost_full to automatically resize the hash table."""
     # Upsize by x1.5 when 60% full.
-    self = HashTable(10, int, almost_full=(.6, 1.5))
+    self = HashTable(10, np.int64, almost_full=(.6, 1.5))
 
     # 5 out of 10 is less than 60%. Nothing should have changed.
     self.add(range(5))
     assert self.max == 10
+    assert repr(self) == "hirola.HashTable<length=5 of 10, dtype=int64>"
 
     # Adding one extra value brings us up to 60% which should trigger a resize.
     self.add(5)
@@ -422,8 +425,9 @@ def test_automatic_resize():
     assert np.array_equal(self.keys, np.arange(6))
 
     # Adding loads of new keys should call resize as many times as needed.
-    self.add(np.arange(30))
+    self.add(np.arange(30, dtype=np.int64))
     assert self.max == 73
+    assert repr(self) == "hirola.HashTable<length=30 of 73, dtype=int64>"
 
 
 def test_copy():

@@ -90,6 +90,9 @@ class HashTable(object):
         self.almost_full = almost_full
         self._thread_lock = Lock()
 
+    def __repr__(self):
+        return f"hirola.HashTable<length={self.length} of {self.max}, dtype={self.dtype}>"
+
     @property
     def max(self) -> int:
         """The maximum number of elements allowed in this table.
