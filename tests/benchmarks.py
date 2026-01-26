@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Speed comparison of hirola vs numpy.keys vs Python dict/set.
 
 This is highly platform/compiler dependent. Best performance is on Linux when

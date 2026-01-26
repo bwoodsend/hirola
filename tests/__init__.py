@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-"""
 import functools
 import warnings
 from contextlib import contextmanager

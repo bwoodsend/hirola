@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-"""
-
 from setuptools import setup, find_packages
 import runpy
 from pathlib import Path

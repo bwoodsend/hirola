@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Test data generators for hash table keys.
 """

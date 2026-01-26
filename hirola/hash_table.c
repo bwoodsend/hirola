@@ -1,5 +1,3 @@
-// -*- coding: utf-8 -*-
-
 #include "hash_table.h"
 
 

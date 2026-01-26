@@ -1,5 +1,3 @@
-// -*- coding: utf-8 -*-
-
 #include <string.h>
 #include <stdint.h>
 #include "hashes.h"

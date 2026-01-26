@@ -1,4 +1,3 @@
-// -*- coding: utf-8 -*-
 #ifndef hash_table_H
 #define hash_table_H
 

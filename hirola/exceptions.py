@@ -1,12 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-=========================
-:mod:`hirola.exceptions`
-=========================
-
-Custom :class:`Exception` subclasses used by :mod:`hirola`.
-
-"""
+"""Custom :class:`Exception` subclasses used by :mod:`hirola`."""
 
 
 class HirolaException(Exception):
