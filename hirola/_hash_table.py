@@ -187,8 +187,10 @@ class HashTable(object):
         # threshold is enabled and crossed. It will only iterate more than twice
         # if `self.almost_full` is set to automatically up-size the table.
         index = -1
+        keys_ptr = ptr(keys)
+        out_ptr = ptr(out)
         while True:
-            index = slug.dll.HT_adds(self._raw._ptr, ptr(keys), ptr(out),
+            index = slug.dll.HT_adds(self._raw._ptr, keys_ptr, out_ptr,
                                      out.size, index + 1)
 
             # If everything worked. Return the indices.
@@ -314,7 +316,9 @@ class HashTable(object):
 
         keys, shape = self._norm_input_keys(keys)
         out = np.empty(shape, bool)
-        slug.dll.HT_contains(self._raw._ptr, ptr(keys), ptr(out), out.size)
+        keys_ptr = ptr(keys)
+        out_ptr = ptr(out)
+        slug.dll.HT_contains(self._raw._ptr, keys_ptr, out_ptr, out.size)
         return out if shape else out.item()
 
     __contains__ = contains
@@ -341,13 +345,15 @@ class HashTable(object):
         """
         keys, shape = self._norm_input_keys(keys)
         out = np.empty(shape, np.intp)
+        keys_ptr = ptr(keys)
+        out_ptr = ptr(out)
         # This function forks out to several similar C functions depending on
         # how missing keys are to be handled.
 
         if default is self._NO_DEFAULT:
             # Default disabled - raise a key error if anything is missing.
-            index = slug.dll.HT_gets_no_default(self._raw._ptr, ptr(keys),
-                                                ptr(out), out.size)
+            index = slug.dll.HT_gets_no_default(self._raw._ptr, keys_ptr,
+                                                out_ptr, out.size)
             if index != -1:
                 source, value = self._blame_key(index, keys, shape)
                 raise KeyError(f"{source} = {value} is not in this table.")
@@ -357,16 +363,16 @@ class HashTable(object):
                 # The default behaviour - use -1 to indicate missing keys.
                 # This is already how the underlying C functions communicate
                 # missing keys so nothing special needs to be done.
-                slug.dll.HT_gets(self._raw._ptr, ptr(keys), ptr(out), out.size)
+                slug.dll.HT_gets(self._raw._ptr, keys_ptr, out_ptr, out.size)
             else:
                 # Not the default of -1 but still an integer default which can
                 # be handled faster in C.
-                slug.dll.HT_gets_default(self._raw._ptr, ptr(keys), ptr(out),
+                slug.dll.HT_gets_default(self._raw._ptr, keys_ptr, out_ptr,
                                          out.size, default)
 
         else:
             # The slowest case: Return some non integer user defined default.
-            slug.dll.HT_gets(self._raw._ptr, ptr(keys), ptr(out), out.size)
+            slug.dll.HT_gets(self._raw._ptr, keys_ptr, out_ptr, out.size)
             out = np.where(out == -1, default, out)
 
         return out if shape else out.item()
