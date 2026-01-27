@@ -4,8 +4,7 @@ import ctypes
 import math
 from threading import Lock
 
-from numbers import Number
-from typing import Union, Tuple
+from typing import Union, Tuple, SupportsInt
 
 import numpy as np
 from cslug import CSlug, ptr, anchor, Header
@@ -45,7 +44,7 @@ class HashTable(object):
     _keys: np.ndarray
     _NO_DEFAULT = object()
 
-    def __init__(self, max: Number, dtype: dtype_types,
+    def __init__(self, max: SupportsInt, dtype: dtype_types,
                  almost_full=(.9, "warn")):
         """
 
