@@ -2,6 +2,7 @@ import functools
 import numbers
 import ctypes
 import math
+import os
 from threading import Lock
 
 from typing import Union, Tuple, SupportsInt
@@ -15,6 +16,12 @@ slug = CSlug(anchor("hash_table", "hash_table.h", "hash_table.c", "hashes.c"),
              headers=hashes_header)
 
 dtype_types = Union[np.dtype, np.generic, type, str, list, tuple]
+
+_seed = os.environ.get("HIROLA_HASH_SEED", "")
+if _seed:  # pragma: no cover  # (Is covered but by subprocess)
+    _seed = int(_seed)
+else:
+    _seed = int.from_bytes(os.urandom(4), "little")
 
 
 def lock_threads(method):
@@ -43,9 +50,10 @@ class HashTable(object):
     """
     _keys: np.ndarray
     _NO_DEFAULT = object()
+    DEFAULT_SEED = _seed
 
     def __init__(self, max: SupportsInt, dtype: dtype_types,
-                 almost_full=(.9, "warn")):
+                 almost_full=(.9, "warn"), seed=DEFAULT_SEED):
         """
 
         Args:
@@ -58,6 +66,10 @@ class HashTable(object):
             almost_full:
                 The handling of almost full hash tables. Sets the `almost_full`
                 attribute.
+            seed:
+                The randomised initial value used internally by hash functions
+                to make hash collisions harder to maliciously induce. Sets the
+                `seed` attribute. Defaults to `hirola.HashTable.DEFAULT_SEED`.
 
         The **max** parameter is silently normalised to `int` and clipped
         to a minimum of 1 if it is less than 1. Zero length tables are not
@@ -83,7 +95,8 @@ class HashTable(object):
 
         hash = choose_hash(key_size)
         self._destroyed = False
-        self._raw = slug.dll.HashTable(max, key_size, ptr(self._hash_owners),
+        self._raw = slug.dll.HashTable(max, key_size, seed,
+                                       ptr(self._hash_owners),
                                        ptr(self._keys_readonly),
                                        hash=ctypes.cast(hash, ctypes.c_void_p))
         self.almost_full = almost_full
@@ -143,6 +156,12 @@ class HashTable(object):
         """The number of elements currently in this table. Aliased via
         :py:`len(table)`."""
         return self._raw.length
+
+    @property
+    def seed(self) -> int:
+        """The initial value used internally by hash functions to make them
+        harder for an attacker to reverse"""
+        return self._raw.seed
 
     def __len__(self):
         return self.length
@@ -484,7 +503,8 @@ class HashTable(object):
         if new_size < self.length:
             raise ValueError(f"Requested size {new_size} is too small to fit "
                              f"{self.length} keys.")
-        new = type(self)(new_size, self.dtype, almost_full=self.almost_full)
+        new = type(self)(new_size, self.dtype, almost_full=self.almost_full,
+                         seed=self.seed)
         # This is only marginally (10-20%) faster than just creating an empty
         # table and running `new.add(self.keys)`.
         slug.dll.HT_copy_keys(self._raw._ptr, new._raw._ptr)
@@ -515,7 +535,7 @@ class HashTable(object):
             Another `HashTable` with the same size, dtype and content.
 
         """
-        out = type(self)(self.max, self.dtype, self.almost_full)
+        out = type(self)(self.max, self.dtype, self.almost_full, self.seed)
         if self._destroyed and usable:
             out.add(self.keys)
         else:
@@ -537,11 +557,11 @@ def choose_hash(key_size):
     return hash
 
 
-def vectorise_hash(hash, key_size, keys):
+def vectorise_hash(hash, seed, key_size, keys):
     """Apply a hash() function to an array of **keys**. Only used for testing.
     """
     keys = np.ascontiguousarray(keys)
     out = np.empty(keys.size * keys.dtype.itemsize // key_size, dtype=np.int32)
-    slug.dll.vectorise_hash(ctypes.cast(hash, ctypes.c_void_p), ptr(keys),
+    slug.dll.vectorise_hash(ctypes.cast(hash, ctypes.c_void_p), seed, ptr(keys),
                             ptr(out), key_size, out.size)
     return out

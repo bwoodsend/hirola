@@ -451,21 +451,27 @@ Use NumPy's indirect sorting functions to get most or least common keys.
           dtype='|S14')
 
 
-A Security Note
----------------
+Denial of service attacks
+-------------------------
 
-Unlike the builtin ``hash()`` used internally by Python's ``set`` and ``dict``,
-``hirola`` does not randomise a hash seed on startup
-making an online server running ``hirola`` more vulnerable to denial of service
-attacks.
-In such an attack, the attacker clogs up your server by sending it requests that
-he/she knows will cause hash collisions and therefore slow it down.
-Whereas a Python hash table's size is always predictably the next power of 8
-above ``len(table) * 3 / 2``, a ``hirola.HashTable()`` may be any size meaning
-that you can make an attack considerably more difficult by adding a little
-randomness to the sizes of your hash tables.
-But if your writing an online server
-which performs dictionary lookup based on user input
-and your user-base doesn't like you much
-or you have some very spiteful below-the-belt competitors
-then I recommend that you don't use this library.
+If a service adds keys from untrusted users to a hash table and a malicious user
+can reverse the hash function used by the hash table, they can generate and
+submit a near infinite number of inputs that have the same hash. This causes the
+insertion and lookup times to go from ``O(1)`` to ``O(len(table))``, congesting
+the service until it's unusable. Reversing hashes is not particularly difficult
+and to emphasise that point, code to break hirola's hashes is provided in
+`denial_of_service.py
+<https://github.com/bwoodsend/hirola/blob/main/denial_of_service.py>`_.
+
+Like the builtin ``hash()`` used internally by Python's ``set`` and ``dict``,
+hirola randomises the *seed* value of its hash functions on startup. This seed
+changes which combinations of keys produce the same hash so that, provided the
+attacker isn't able to find out the seed, they shouldn't be able to predict hash
+collisions.
+
+The seed value can be overridden with the ``hirola.HashTable(..., seed=value)``
+option or with a ``HIROLA_HASH_SEED`` environment variable analogous to Python's
+``PYTHONHASHSEED`` environment variable. But ``hirola.HashTable()`` doesn't
+change any outward behavior based on its seed value so, whilst setting
+``PYTHONHASHSEED`` can be used to to make the order of Python sets reproducible,
+setting hirola's seed shouldn't be needed for anything beyond morbid curiosity.

@@ -8,12 +8,13 @@
 #include <stdbool.h>
 
 
-typedef int32_t (*Hash)(void * key, const size_t key_size);
+typedef int32_t (*Hash)(int32_t seed, void * key, const size_t key_size);
 
 
 typedef struct HashTable {
   const size_t max;
   const size_t key_size;
+  const int32_t seed;
   ptrdiff_t * const hash_owners;
   void * const keys;
   size_t length;

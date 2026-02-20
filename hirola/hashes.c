@@ -2,7 +2,6 @@
 #include <stdint.h>
 #include "hashes.h"
 
-
 /* Hash functions.
 
   Hash functions are the key to hash table organisation. Without a good one,
@@ -34,11 +33,11 @@
 /* A big prime number that fits into a int32_t. */
 const size_t NOISE = 0x0B070503;
 
-int32_t hash(void * key, const size_t key_size) {
+int32_t hash(int32_t seed, void * key, const size_t key_size) {
   /* Generic hash - assumes **key_size** is a multiple of sizeof(int32_t). */
 
   int32_t * key_ = (int32_t *) key;
-  int32_t out = 0;
+  int32_t out = seed;
   for (size_t i = 0; i < key_size / sizeof(int32_t); i++) {
       out ^= key_[i] * 0x10001;
       out *= NOISE;
@@ -47,19 +46,20 @@ int32_t hash(void * key, const size_t key_size) {
 }
 
 
-int32_t small_hash(void * key, const size_t key_size) {
+int32_t small_hash(int32_t seed, void * key, const size_t key_size) {
   /* Hash for key_size <= sizeof(int32_t). */
 
+  (void)(seed);  // Suppress unused parameter warning
   int32_t out = 0;
   memcpy(&out, key, key_size);
   return out * NOISE;
 }
 
 
-int32_t hybrid_hash(void * key, const size_t key_size) {
+int32_t hybrid_hash(int32_t seed, void * key, const size_t key_size) {
   /* A combination of hash() and small_hash() for when **key_size** is not a
      multiple of sizeof(int32_t). */
 
   size_t tail = key_size % sizeof(int32_t);
-  return hash(key, key_size) ^ small_hash(key + (key_size - tail), tail);
+  return hash(seed, key, key_size) ^ small_hash(seed, key + (key_size - tail), tail);
 }

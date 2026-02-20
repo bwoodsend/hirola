@@ -23,6 +23,11 @@ the change configurable.
 """
 
 import ctypes
+import subprocess
+import sys
+import re
+import textwrap
+import os
 import statistics
 
 import numpy as np
@@ -36,8 +41,8 @@ def test_vectorised_hash():
     hash = slug.dll.hash
     keys = gen.random(10)
     key_size = keys.dtype.itemsize * keys.shape[1]
-    hashes = np.array([hash(ptr(i), key_size) for i in keys])
-    hashes_ = vectorise_hash(hash, key_size, keys)
+    hashes = np.array([hash(17, ptr(i), key_size) for i in keys])
+    hashes_ = vectorise_hash(hash, 17, key_size, keys)
     assert np.array_equal(hashes_, hashes)
 
 
@@ -66,7 +71,7 @@ def counts_with(generate, table_size: int, dtype):
     key_size = x.dtype.itemsize * x[0].size
     hash = choose_hash(key_size)
 
-    hashes = vectorise_hash(hash, key_size, x)
+    hashes = vectorise_hash(hash, 0, key_size, x)
     return count(hashes, table_size)
 
 
@@ -87,7 +92,7 @@ def test_aggregate_collisions(generate, table_size: int, dtype):
 
     np.random.seed(0)
     x = generate(1000).astype(dtype)
-    self = HashTable(table_size, (dtype, x[0].size))
+    self = HashTable(table_size, (dtype, x[0].size), seed=0)
 
     # Pulling a global variable out of a C library is disproportionately
     # awkward.
@@ -112,3 +117,32 @@ def test_average_collisions():
     if not per_test_collisions:
         pytest.skip("No data to work with.")
     assert statistics.mean(per_test_collisions.values()) < 2500
+
+
+def test_dos():
+    if not hasattr(slug.dll, "collisions"):
+        pytest.skip("Requires compiling with CC_FLAGS='-D COUNT_COLLISIONS'.")
+
+    def run(seed):
+        p = subprocess.run([sys.executable, "-c", textwrap.dedent("""
+            import ctypes, denial_of_service, hirola
+            old_batched = denial_of_service._batched
+            def batched(*args):
+                iterator = old_batched(*args)
+                for i in range(20):
+                    yield next(iterator)
+            denial_of_service._batched = batched
+            denial_of_service.main(hirola.HashTable.DEFAULT_SEED, 123)
+            collisions_ptr = ctypes.cast(hirola._hash_table.slug.dll.collisions,
+                                         ctypes.POINTER(ctypes.c_size_t))
+            print("collisions", collisions_ptr.contents.value)
+        """)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                env={**os.environ, "HIROLA_HASH_SEED": str(seed)})
+        assert p.returncode == 0, p.stdout.decode()
+        times = re.findall(rb"insertion-time=([\d.]+)", p.stdout)
+        collisions = int(re.search(rb"collisions (\d+)", p.stdout)[1])
+        return np.array(times, dtype=float), collisions
+
+    bad_run = run(123)
+    good_run = run(124)
+    assert good_run[1] < bad_run[1] // 100

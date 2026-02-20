@@ -25,7 +25,7 @@ ptrdiff_t HT_hash_for(HashTable * self, void * key, bool its_not_there) {
      choose an unused hash. */
 
   // Get an initial hash for `key`.
-  ptrdiff_t hashed = self -> hash(key, self->key_size);
+  ptrdiff_t hashed = self -> hash(self->seed, key, self->key_size);
   hashed = euclidean_modulo(hashed, self->max);
 
   // Search, starting from our initial hash:
@@ -206,9 +206,10 @@ void HT_copy_keys(HashTable * self, HashTable * other) {
 }
 
 
-void vectorise_hash(Hash hash, void * keys, int32_t * hashes, size_t key_size,
-                    size_t length) {
+void vectorise_hash(Hash hash, int32_t seed, void * keys, int32_t * hashes,
+                    size_t key_size, size_t length) {
   /* Apply a hash() function to an array of **keys**. Only used for testing. */
-  for (size_t i = 0; i < length; i++)
-    hashes[i] = hash(keys + i * key_size, key_size);
+  for (size_t i = 0; i < length; i++) {
+    hashes[i] = hash(seed, keys + i * key_size, key_size);
+  }
 }

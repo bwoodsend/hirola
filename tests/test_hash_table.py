@@ -29,19 +29,19 @@ def test_modulo():
 
 def test_hash():
     x = np.array([123, 4234, 213], dtype=np.int32)
-    out = np.int32(0)
+    out = np.int32(13)
     old = np.seterr(over="ignore")
     for i in range(3):
         out ^= x[i] * np.int32(0x10001)
         out *= np.int32(0x0B070503)
     np.seterr(**old)
-    assert slug.dll.hash(ptr(x), 12) == out
+    assert slug.dll.hash(13, ptr(x), 12) == out
 
 
 @ignore_almost_full_warnings
 def test_walk_through():
     data = np.array([100, 101, 100, 103, 104, 105, 103, 107], dtype=np.float32)
-    self = HashTable(5, dtype=data.dtype)
+    self = HashTable(5, dtype=data.dtype, seed=0)
 
     assert self.dtype == data.dtype
     assert np.all(self._hash_owners == -1)
@@ -50,7 +50,7 @@ def test_walk_through():
     assert self.max == 5
     assert repr(self) == "hirola.HashTable<length=0 of 5, dtype=float32>"
 
-    hash = slug.dll.hash(ptr(data), self.key_size)
+    hash = slug.dll.hash(0, ptr(data), self.key_size)
     for i in range(2):
         assert slug.dll.HT_hash_for(self._raw._ptr, ptr(data), False) \
                == hash % self.max
@@ -411,7 +411,7 @@ def test_infinite_resizing_check():
 def test_automatic_resize():
     """Test setting self.almost_full to automatically resize the hash table."""
     # Upsize by x1.5 when 60% full.
-    self = HashTable(10, np.int64, almost_full=(.6, 1.5))
+    self = HashTable(10, np.int64, almost_full=(.6, 1.5), seed=898)
 
     # 5 out of 10 is less than 60%. Nothing should have changed.
     self.add(range(5))
@@ -428,14 +428,16 @@ def test_automatic_resize():
     self.add(np.arange(30, dtype=np.int64))
     assert self.max == 73
     assert repr(self) == "hirola.HashTable<length=30 of 73, dtype=int64>"
+    assert self.seed == 898
 
 
 def test_copy():
-    self = HashTable(10, int)
+    self = HashTable(10, int, seed=99)
     self.add(range(3, 8))
     copy = self.copy()
     assert copy._destroyed is False
     assert copy.keys.tolist() == self.keys.tolist()
+    assert copy.seed == self.seed
     self.add(9)
     assert 9 in self.keys
     assert 9 not in copy.keys
@@ -447,10 +449,12 @@ def test_copy():
     assert copy.keys.tolist() == self.keys.tolist()
     keys[0] = 5
     assert copy.keys[0] == 3
+    assert copy.seed == self.seed
 
     copy = self.copy(usable=True)
     assert copy._destroyed is False
     assert copy.keys.tolist() == [5, 4, 6, 7, 9]
+    assert copy.seed == self.seed
 
 
 def test_in():
