@@ -1,56 +1,56 @@
----
 name: Test
 
 on:
   workflow_dispatch:
 
+env:
+  FORCE_COLOR: 1
+
 jobs:
-  test:
+  docker:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: [3.8, '3.10', 3.13-dev]
-        architecture: ['x64']
-        include:
-          - os: ubuntu-20.04
-            python-version: 3.6
-            architecture: 'x64'
-          - os: macos-latest
-            python-version: 3.13-dev
-            architecture: 'x64'
-          - os: windows-latest
-            python-version: 3.13-dev
-            architecture: 'x64'
-
+        python-version: [3.6, 3.8, '3.10', 3]
       fail-fast: false
-
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     timeout-minutes: 15
-
     steps:
-
       - uses: actions/checkout@v4
+      - run: |
+          docker run -v"$PWD:/io" -e FORCE_COLOR=1 -w /io ${{ matrix.python-version == '3.6' && '--platform=linux/i386' || '' }} python:${{ matrix.python-version }} sh -evc '
+            pip install wheel toml setuptools
+            pip install -e .[test]
+            python setup.py build
+            pytest
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+            CC_FLAGS="-D COUNT_COLLISIONS" python setup.py build
+            pytest
+
+            pip uninstall -y hirola && pip install . pyinstaller
+            cd tests/PyInstaller_
+            pyinstaller frozen-pytest.spec
+            ./dist/frozen-pytest/frozen-pytest ../..
+          '
+
+  main:
+    strategy:
+      matrix:
+        platform: [macos-latest, windows-latest]
+      fail-fast: false
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
-          architecture: ${{ matrix.architecture }}
+          python-version: 3.x
+      - run: pip install wheel toml setuptools
+      - run: pip install -e .[test]
 
-      - name: Install
-        run: |
-          pip install wheel toml setuptools
-          pip install -e .[test]
-
-      - name: Build
-        run: python setup.py build
+      - run: python setup.py build
         env:
           CC_FLAGS: -D COUNT_COLLISIONS
-
-      - name: Test
-        run: pytest
-        env:
-          FORCE_COLOR: 1
+      - run: pytest
 
       # Test PyInstaller.
       - run: pip uninstall -y hirola && pip install .
