@@ -100,10 +100,16 @@ def test_dtype_normalisation_simple():
     for shape in SHAPES:
         keys, shape_ = self._norm_input_keys(np.empty(shape, dtype=np.int16))
         assert shape_ == shape
+        if np.array(np.empty(shape).tolist()).shape == shape:
+            keys, shape_ = self._norm_input_keys(np.empty(shape, dtype=np.int16).tolist())
+            assert shape_ == shape
     assert self._norm_input_keys(np.empty(10, dtype=np.int16))[1] == (10,)
 
     with pytest.raises(TypeError, match="Expecting int16 but got float64."):
         self.get(np.arange(10, dtype=np.float64))
+
+    assert self.add(range(5)).tolist() == [0, 1, 2, 3, 4]
+    assert self.add([range(3)]).tolist() == [[0, 1, 2]]
 
 
 def test_dtype_normalisation_multidimensional():
@@ -124,6 +130,9 @@ def test_dtype_normalisation_multidimensional():
     for shape in SHAPES:
         _, shape_ = self._norm_input_keys(np.empty(shape + (3,), np.float32))
         assert shape_ == shape
+
+    assert self.add((1.0, 2, 3)) == 0
+    assert self.add([(3, 2, 1.5)] * 3).tolist() == [1, 1, 1]
 
 
 def test_dtype_normalisation_records():
