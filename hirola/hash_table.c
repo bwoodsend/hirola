@@ -29,7 +29,7 @@ ptrdiff_t HT_hash_for(HashTable * self, void * key, bool its_not_there) {
   hashed = euclidean_modulo(hashed, self->max);
 
   // Search, starting from our initial hash:
-  for (size_t j = 0; j < self->max; j++) {
+  for (ptrdiff_t j = 0; j < self->max; j++) {
     // Provided the hash function self->hash() is working well for the input
     // data, this loop should rarely require more than one iteration.
 
@@ -62,7 +62,8 @@ ptrdiff_t HT_hash_for(HashTable * self, void * key, bool its_not_there) {
     // match.
     // Incrementing with a ridiculously big prime number instead of just adding
     // 1 helps to break up clusters of collisions (albeit inconsistently).
-    hashed = euclidean_modulo(hashed + 118394396737867, self->max);
+    hashed++;
+    if (hashed >= self->max) hashed -= self->max;
   }
 
   return -1;

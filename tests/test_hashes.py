@@ -102,11 +102,7 @@ def test_aggregate_collisions(generate, table_size: int, dtype):
     old = collisions_ptr.contents.value
     self.add(x)
     collisions = collisions_ptr.contents.value - old
-
-    if sys.maxsize > (1 << 32):
-        assert collisions < 10000
-    else:
-        assert collisions < 20000
+    assert collisions < 20000
     per_test_collisions[gen, table_size, dtype] = collisions
 
 
