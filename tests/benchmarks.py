@@ -113,7 +113,7 @@ if __name__ == '__main__':
     try:
         for i in itertools.count():
             for (name, (method, data)) in methods.items():
-                time = timeit(method, 200, data)
+                time = timeit(method, max(10_000_000 // options.size, 3), data)
                 means[name] = (i * means[name] + time) / (i + 1)
 
             show()
