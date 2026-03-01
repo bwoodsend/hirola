@@ -142,3 +142,14 @@ def test_dos():
     bad_run = run(123)
     good_run = run(124)
     assert good_run[1] < bad_run[1] // 100
+
+
+@pytest.mark.parametrize("key_size, expected_count", [(4, 1), (5, 1 << 8), (6, 1 << 16)])
+def test_collision_generator(key_size, expected_count):
+    import denial_of_service
+    keys = list(denial_of_service.generate_hash_collisions(99, key_size, 12345))
+    assert len(keys) == expected_count
+    if key_size % 4:
+        assert all(denial_of_service.hybrid_hash(99, i) == 12345 for i in keys)
+    else:
+        assert all(denial_of_service.hash32(99, i) == 12345 for i in keys)

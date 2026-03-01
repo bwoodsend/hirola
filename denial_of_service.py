@@ -32,7 +32,9 @@ def fix_hash(current_hash, target_hash):
 
 def _combinations(sequence, n):
     """itertools.combinations_with_replacement() but allows huge sequences"""
-    if n == 1:
+    if n == 0:
+        yield ()
+    elif n == 1:
         for i in sequence:
             yield (i,)
     elif n >= 2:
@@ -65,9 +67,9 @@ def generate_hash_collisions(seed, key_size, target_hash):
     else:
         remainder = key_size % 4
         _key_size = key_size - remainder
-        for suffix in range(8 ** remainder):
-            _target_hash = target_hash ^ (suffix * A_inv) & MASK
-            for prefix in generate_hash_collisions(_key_size, _target_hash):
+        for suffix in range(256 ** remainder):
+            _target_hash = target_hash ^ (suffix * B) & MASK
+            for prefix in generate_hash_collisions(seed, _key_size, _target_hash):
                 yield (*prefix, suffix)
 
 
