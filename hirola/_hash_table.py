@@ -3,6 +3,7 @@ import numbers
 import ctypes
 import math
 import os
+import contextlib
 from threading import Lock
 
 from typing import Union, Tuple, SupportsInt
@@ -24,13 +25,48 @@ else:
     _seed = int.from_bytes(os.urandom(4), "little")
 
 
-def lock_threads(method):
-    """Make an non thread safe method lock and unlock the thread on enter and
-    exit respectively."""
+class RWLock:
+    # https://en.wikipedia.org/wiki/Readers%E2%80%93writer_lock#Using_two_mutexes
+    def __init__(self):
+        self.b = 0
+        self.r = Lock()
+        self.g = Lock()
+
+    def write(self):
+        return self.g
+
+    @contextlib.contextmanager
+    def read(self):
+        with self.r:
+            self.b += 1
+            if self.b == 1:
+                self.g.__enter__()
+        try:
+            yield
+        finally:
+            with self.r:
+                self.b -= 1
+                if self.b == 0:
+                    self.g.__exit__(None, None, None)
+
+
+def pure(method):
+    """Mark method as a read-only operation"""
 
     @functools.wraps(method)
     def wrapped(self, *args, **kwargs):
-        with self._thread_lock:
+        with self._thread_lock.read():
+            return method(self, *args, **kwargs)
+
+    return wrapped
+
+
+def inpure(method):
+    """Mark method that mutates its instance"""
+
+    @functools.wraps(method)
+    def wrapped(self, *args, **kwargs):
+        with self._thread_lock.write():
             return method(self, *args, **kwargs)
 
     return wrapped
@@ -100,7 +136,7 @@ class HashTable(object):
                                        ptr(self._keys_readonly),
                                        hash=ctypes.cast(hash, ctypes.c_void_p))
         self.almost_full = almost_full
-        self._thread_lock = Lock()
+        self._thread_lock = RWLock()
 
     def __repr__(self):
         return f"hirola.HashTable<length={self.length} of {self.max}, dtype={self.dtype}>"
@@ -172,7 +208,7 @@ class HashTable(object):
     def _get(self, key):
         return slug.dll.HT_get(self._raw._ptr, ptr(key))
 
-    @lock_threads
+    @inpure
     def add(self, keys) -> np.ndarray:
         """Add **keys** to the table.
 
@@ -316,6 +352,7 @@ class HashTable(object):
         import warnings
         warnings.warn(AlmostFull(message), stacklevel=3)
 
+    @pure
     def contains(self, keys) -> Union[bool, np.ndarray]:
         """Check if a key or keys are in the table.
 
@@ -341,6 +378,7 @@ class HashTable(object):
 
     __contains__ = contains
 
+    @pure
     def get(self, keys, default=-1) -> np.ndarray:
         """Lookup indices of **keys** in `keys`.
 
@@ -451,6 +489,7 @@ class HashTable(object):
             return keys, keys.shape[:split]
         return keys, keys.shape
 
+    @inpure
     def destroy(self) -> np.ndarray:
         """Release a writable version of `keys` and permanently disable
         this table.
@@ -499,6 +538,10 @@ class HashTable(object):
             Add the **in_place** option.
 
         """
+        with (self._thread_lock.write if in_place else self._thread_lock.read)():
+            return self._resize(new_size, in_place)
+
+    def _resize(self, new_size, in_place=False):
         self._check_destroyed()
         if new_size < self.length:
             raise ValueError(f"Requested size {new_size} is too small to fit "
@@ -521,9 +564,7 @@ class HashTable(object):
 
         return new
 
-    _resize = resize
-    resize = lock_threads(_resize)
-
+    @pure
     def copy(self, usable=True) -> 'HashTable':
         """Deep copy this table.
 
