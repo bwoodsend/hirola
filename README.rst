@@ -475,3 +475,27 @@ option or with a ``HIROLA_HASH_SEED`` environment variable analogous to Python's
 change any outward behavior based on its seed value so, whilst setting
 ``PYTHONHASHSEED`` can be used to to make the order of Python sets reproducible,
 setting hirola's seed shouldn't be needed for anything beyond morbid curiosity.
+
+
+Multithreading/Freethreading support
+------------------------------------
+
+When using a single ``HashTable()`` instance across multiple threads:
+
+* Read-only operations (``.get()``, ``.contains()``,
+  ``.resize(in_place=False)``, ``.copy()``, querying any attributes) may be
+  safely called across threads and under freethreaded Python will benefit from
+  concurrency.
+
+* Write operations (``.add()``, ``.resize(in_place=True)``, writing to
+  ``.almost_full``) can not be used whilst other read-only or write operations
+  are in progress. Doing so may lead to crashes or inconsistent results. There
+  is a hidden per-table thread lock to protect against the most common misuse
+  but it shouldn't be relied upon (and I regret adding it in the first place).
+
+There is an `experimental branch
+<https://github.com/bwoodsend/hirola/tree/rw-lock>`_ adding a read/write lock to
+achieve a more complete form of thread safety. I'm reluctant to merge it unless
+people actually need it since even a thread safe API doesn't actually make usage
+thread safe and I'd be unable to back out support if it becomes a maintenance
+pain. Raise an issue if you genuinely have a use for it.
