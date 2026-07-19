@@ -20,10 +20,7 @@ from colorama import init
 from tabulate import tabulate, tabulate_formats
 from humanize import metric
 from sloth.simple import time_callable as timeit
-import numpy_indexed
-import pandas
 
-from hirola import HashTable
 from tests import generate
 
 init()
@@ -38,37 +35,58 @@ def numpy_unique_indices(data):
     np.unique(data, return_inverse=True)
 
 
-def pandas_categorical(data):
-    pandas.Categorical(data).codes
+try:
+    import pandas
 
+    def pandas_categorical(data):
+        pandas.Categorical(data).codes
+except ImportError:
+    pandas_categorical = None
 
-def numpy_indexed_unique(data):
-    numpy_indexed.unique(data)
+try:
+    import numpy_indexed
+
+    def numpy_indexed_unique(data):
+        numpy_indexed.unique(data)
+except ImportError:
+    numpy_indexed_unique = None
 
 
 @functools.lru_cache
-def hirola(size_multiplier):
+def hirola(size_multiplier, old=False):
+    if old:
+        try:
+            from hirola_old import HashTable
+        except ImportError:
+            return None
+    else:
+        from hirola import HashTable
 
     def hirola(data):
         self = HashTable(
             len(data) * size_multiplier, (data.dtype, data[0].shape))
         self.add(data)
 
-    hirola.__name__ += "_" + str(size_multiplier)
+    hirola.__name__ += "_" + str(size_multiplier) + ("_old" if old else "")
     return hirola
 
 
 METHODS = {
     "hirola x1.25": (hirola(1.25), None),
+    "hirola x1.25 old": (hirola(1.25, True), None),
     "hirola x1.5": (hirola(1.5), None),
+    "hirola x1.5 old": (hirola(1.5, True), None),
     "hirola x2.5": (hirola(2.5), None),
+    "hirola x2.5 old": (hirola(2.5, True), None),
     "hirola x5": (hirola(5), None),
+    "hirola x5 old": (hirola(5, True), None),
     "set()": (set, generate.pysafe),
     "numpy.unique()": (numpy_unique, None),
     "numpy.unique(return_indices=True)": (numpy_unique_indices, None),
     "numpy_indexed.unique()": (numpy_indexed_unique, None),
     "pandas.Categorical()": (pandas_categorical, generate.to_void),
 }
+METHODS = {i:j for (i, j) in METHODS.items() if j[0] is not None}
 
 if __name__ == '__main__':
     parser = ArgumentParser()
